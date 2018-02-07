@@ -60,6 +60,7 @@ struct SItemProperties {
 	//Item specific
 	
 	int itemType;
+	int itemRarity;
 	float itemWeight;
 
 	//Non-editor
@@ -75,5 +76,6 @@ static void ReflectType(Schematyc::CTypeDesc<SItemProperties>& desc) {
 	desc.AddMember(&SItemProperties::sPhysicsProperties, 'phyp', "PhysicsProperties", "Physics Properties", "All the physics settings for current item", SPhysicsProperties());
 	desc.AddMember(&SItemProperties::itemWeight, 'iw', "ItemWeight", "Item Weight", "Sets the item weight in kilos", 0.f);
 	desc.AddMember(&SItemProperties::itemType, 'it', "ItemType", "Item Type", "Sets the item type", 0);
+	desc.AddMember(&SItemProperties::itemRarity, 'ir', "ItemRarity", "Item Rarity", "Sets the item rarity", 0);
 
 }
