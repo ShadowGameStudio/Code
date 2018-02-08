@@ -10,18 +10,18 @@ Purpose :
 
 #include <CryEntitySystem/IEntityComponent.h>
 #include "LootSpawnProperties.h"
-
-struct SClassNames {
-
-	//Fix lootSpawnComponent able to find random class with right weapon type and such
-	string sMeeleWeapon = "CMeeleWeaponComponent";
-	string sBackpack = "CBackpackComponent";
-
-};
+#include <vector>
+#include <string>
 
 class CLootSpawnComponent : public IEntityComponent {
 public:
 	CLootSpawnComponent() = default;
+
+	std::vector<string> sCommonClasses = {"Test1", "Test2"};
+	std::vector<string> sUncommonClasses = {"test4"};
+	std::vector<string> sRareClasses = {"test3"};
+	std::vector<string> sRarerClasses = {"test2"};
+	std::vector<string> sURareClasses = {"test1"};
 
 	virtual void Initialize() override;
 	virtual uint64 GetEventMask() const override;
@@ -30,6 +30,7 @@ public:
 
 	virtual SLootSpawnProperties *GetProperties() { return &sLootSpawnProperties; }
 	void SpawnItems();
+	string GetRandomClass(int* classAmount);
 
 protected:
 

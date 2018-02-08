@@ -45,10 +45,13 @@ void CLootSpawnComponent::SpawnItems() {
 
 	if (GetProperties()->iLootRarity == 1) {
 
+		int *pLootRarity = &sCommonClasses.size;
+		string sClass = GetRandomClass(pLootRarity);
+
 		//Setup spawn params for the loot
 		SEntitySpawnParams spawnParams;
 
-		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("");
+		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass(sClass);
 		spawnParams.sName = "";
 		spawnParams.vPosition = Vec3(500, 580, 30);
 		spawnParams.vScale = Vec3(1, 1, 1);
@@ -56,6 +59,7 @@ void CLootSpawnComponent::SpawnItems() {
 		//Spawn the entity
 		if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
 
+			//fix so that this also gets class
 			pEntity->CreateComponentClass<class test>(); 
 
 		}
@@ -74,4 +78,25 @@ void CLootSpawnComponent::SpawnItems() {
 
 	}
 
+}
+
+string CLootSpawnComponent::GetRandomClass(int* classAmount) {
+
+	//Gets a random number
+	srand(time(NULL));
+	int RandIndex = rand() % *classAmount;
+	
+	//Returns the value at the randomized position
+	if (GetProperties()->iLootRarity == 1)
+		return sCommonClasses[RandIndex];
+	else if (GetProperties()->iLootRarity == 2)
+		return sUncommonClasses[RandIndex];
+	else if (GetProperties()->iLootRarity == 3)
+		return sRareClasses[RandIndex];
+	else if (GetProperties()->iLootRarity == 4)
+		return sRarerClasses[RandIndex];
+	else if (GetProperties()->iLootRarity == 5)
+		return sURareClasses[RandIndex];
+	else
+		return;
 }
