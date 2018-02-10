@@ -1,8 +1,8 @@
 /*-------------------------------------------------------------------------------
 
 Author : Ivar Jönsson
-Project : 
-Purpose : 
+Project : BR
+Purpose : The component that handels the spawning of items at designated places
 
 -------------------------------------------------------------------------------*/
 
@@ -31,6 +31,8 @@ public:
 	virtual SLootSpawnProperties *GetProperties() { return &sLootSpawnProperties; }
 	void SpawnItems();
 	string GetRandomClass(int* classAmount);
+
+	int test = 4;
 
 protected:
 

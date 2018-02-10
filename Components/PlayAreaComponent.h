@@ -33,7 +33,9 @@ public:
 
 	int iTimesDecreased = 0;
 	int iDecreaseTime = 12000;
-	float fScale = 20.f;
+	float fScaleX = 20.f;
+	float fScaleY = 20.f;
+	float fScaleZ = 20.f;
 	float fScaleTo = 15.f;
 	float fDecreaseAmount = 0.01f;
 	bool bIsSpawned = false;

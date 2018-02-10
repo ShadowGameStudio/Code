@@ -45,7 +45,7 @@ void CLootSpawnComponent::SpawnItems() {
 
 	if (GetProperties()->iLootRarity == 1) {
 
-		int *pLootAmount = &sCommonClasses.size;
+		int *pLootAmount = &test;
 		string sClass = GetRandomClass(pLootAmount);
 
 		//Setup spawn params for the loot
@@ -84,7 +84,7 @@ string CLootSpawnComponent::GetRandomClass(int* classAmount) {
 	int* pClassAmount = classAmount;
 	
 	//Gets a random number
-	srand(time(NULL));
+	srand((unsigned int)time(NULL));
 	int RandIndex = rand() % *pClassAmount;
 	
 	//Returns the value at the randomized position
@@ -99,5 +99,5 @@ string CLootSpawnComponent::GetRandomClass(int* classAmount) {
 	else if (GetProperties()->iLootRarity == 5)
 		return sURareClasses[RandIndex];
 	else
-		return;
+		return "NULL";
 }

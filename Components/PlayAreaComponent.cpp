@@ -48,9 +48,9 @@ void CPlayAreaComponent::ProcessEvent(SEntityEvent & event) {
 		if (event.nParam[0] == Timer_Decrease) {
 
 			//Changes the scale. Called every frame
-			if (fScale >= fScaleTo) {
-				fScale -= fDecreaseAmount;
-				m_pEntity->SetScale(Vec3(fScale));
+			if (fScaleX >= fScaleTo) {
+				fScaleX -= fDecreaseAmount;
+				m_pEntity->SetScale(Vec3(fScaleX, fScaleY, fScaleZ));
 			}
 			else
 				bIsDecreased = true;
@@ -107,7 +107,7 @@ void CPlayAreaComponent::SpawnPlayArea() {
 	spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("schematyc::Items::playArea");
 	spawnParams.sName = "PlayArea";
 	spawnParams.vPosition = Vec3(540, 581, 34);
-	spawnParams.vScale = Vec3(fScale);
+	spawnParams.vScale = Vec3(fScaleX, fScaleY, fScaleZ);
 
 	//Spawn the entity
 	if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
@@ -124,6 +124,8 @@ void CPlayAreaComponent::DecreseSpawnArea() {
 	//Makes sure that the Play Area only decreases by fDecreaseAmount every 1ms
 
 	//Checks if it already has been decreased or not
+
+	//Change function to work with new system
 	if(!bIsDecreased)
 		m_pEntity->SetTimer(Timer_Decrease, 1);
 	else if (!bTimerSet) {
