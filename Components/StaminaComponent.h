@@ -1,17 +1,26 @@
 /*-------------------------------------------------------------------------------
 
 Author : Ivar Jönsson
-Project : 
-Purpose : 
+Project : BR
+Purpose : Handles the stamina, derived from VitalStatus
 
 -------------------------------------------------------------------------------*/
 
 #pragma once
 
-#include <CryEntitySystem/IEntityComponent.h>
+#include "VitalStatusComponent.h"
 
-class CComponent : public IEntityComponent {
+class CStaminaComponent : public SVitalStatusComponent {
+
 public:
-	CComponent() = default;
-	CComponent::~CComponent();
+
+	CStaminaComponent() = default;
+
+	virtual void InitializeClass() override;
+	virtual void ProcessClassEvent(SEntityEvent& event) override;
+	static void ReflectType(Schematyc::CTypeDesc<CStaminaComponent>& desc);
+
+	//Stamina System
+	void Update(float frameTime);
+
 };

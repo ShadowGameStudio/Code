@@ -23,42 +23,35 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterPlayer)
 
 void CPlayerComponent::Initialize()
 {
-	// Create the camera component, will automatically update the viewport every frame
-	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
+
+	if (gEnv->IsEditor()) {
+
+		m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
+
+		m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
+		m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
+
+		m_pAnimationComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
+		m_pAnimationComponent->SetMannequinAnimationDatabaseFile("Animations/Mannequin/ADB/FirstPerson.adb");
+		m_pAnimationComponent->SetCharacterFile("Objects/Characters/SampleCharacter/thirdperson.cdf");
+		m_pAnimationComponent->SetControllerDefinitionFile("Animations/Mannequin/ADB/FirstPersonControllerDefinition.xml");
+		m_pAnimationComponent->SetDefaultScopeContextName("FirstPersonCharacter");
+		m_pAnimationComponent->SetDefaultFragmentName("Idle");
+		m_pAnimationComponent->SetAnimationDrivenMotion(false);
+		m_pAnimationComponent->LoadFromDisk();
+		m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
+		m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
+		m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
 	
-	// The character controller is responsible for maintaining player physics
-	m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
-	// Offset the default character controller up by one unit
-	m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
+	}
 
-	// Create the advanced animation component, responsible for updating Mannequin and animating the player
-	m_pAnimationComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
-	
-	// Set the player geometry, this also triggers physics proxy creation
-	m_pAnimationComponent->SetMannequinAnimationDatabaseFile("Animations/Mannequin/ADB/FirstPerson.adb");
-	m_pAnimationComponent->SetCharacterFile("Objects/Characters/SampleCharacter/thirdperson.cdf");
-
-	m_pAnimationComponent->SetControllerDefinitionFile("Animations/Mannequin/ADB/FirstPersonControllerDefinition.xml");
-	m_pAnimationComponent->SetDefaultScopeContextName("FirstPersonCharacter");
-	// Queue the idle fragment to start playing immediately on next update
-	m_pAnimationComponent->SetDefaultFragmentName("Idle");
-
-	// Disable movement coming from the animation (root joint offset), we control this entirely via physics
-	m_pAnimationComponent->SetAnimationDrivenMotion(false);
-
-	// Load the character and Mannequin data from file
-	m_pAnimationComponent->LoadFromDisk();
-
-	// Acquire fragment and tag identifiers to avoid doing so each update
-	m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
-	m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
-	m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
 
 	InitializeInput();
 
 	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
 
-	Revive();
+	if(gEnv->IsEditor())
+		Revive();
 }
 
 uint64 CPlayerComponent::GetEventMask() const
@@ -73,7 +66,8 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 	case ENTITY_EVENT_START_GAME:
 	{
 		// Revive the entity when gameplay starts
-		Revive();
+		if(gEnv->IsEditor())
+			Revive();
 	}
 	break;
 
@@ -89,23 +83,47 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 	{
 		SEntityUpdateContext* pCtx = (SEntityUpdateContext*)event.nParam[0];
 
-		// Start by updating the movement request we want to send to the character controller
-		// This results in the physical representation of the character moving
+		if (m_pCameraComponent && m_pAnimationComponent && m_pCharacterController) {
+
 		UpdateMovementRequest(pCtx->fFrameTime);
-
-		// Process mouse input to update look orientation.
 		UpdateLookDirectionRequest(pCtx->fFrameTime);
-
-		// Update the animation state of the character
 		UpdateAnimation(pCtx->fFrameTime);
 
-		// Update the camera component offset
 		if (bIsTP)
 			UpdateCamera(pCtx->fFrameTime);
 		else
 			UpdateFPCamera(pCtx->fFrameTime);
 
 		Update(pCtx->fFrameTime);
+
+		}
+
+		if (!bIsInitialized) {
+			if (!gEnv->IsEditor()) {
+
+				m_pCameraComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CCameraComponent>();
+				m_pCharacterController = m_pEntity->GetComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
+				m_pAnimationComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
+
+				if (m_pCharacterController)
+					m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
+
+				if (m_pAnimationComponent) {
+
+					m_pAnimationComponent->LoadFromDisk();
+					m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
+					m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
+					m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
+
+				}
+
+				if (m_pCameraComponent && m_pAnimationComponent && m_pCharacterController) {
+					bIsInitialized = true;
+					Revive();
+				}
+
+			}
+		}
 	}
 	break;
 	}
@@ -123,20 +141,19 @@ void CPlayerComponent::ReflectType(Schematyc::CTypeDesc<CPlayerComponent>& desc)
 
 void CPlayerComponent::Revive()
 {
-	// Find a spawn point and move the entity there
 	SpawnAtSpawnPoint();
-
-	// Unhide the entity in case hidden by the Editor
 	GetEntity()->Hide(false);
-
-	// Make sure that the player spawns upright
 	GetEntity()->SetWorldTM(Matrix34::Create(Vec3(1, 1, 1), IDENTITY, GetEntity()->GetWorldPos()));
 
-	// Apply character to the entity
-	m_pAnimationComponent->ResetCharacter();
-	m_pCharacterController->Physicalize();
+	if (m_pAnimationComponent && m_pCharacterController) {
 
-	// Reset input now that the player respawned
+		m_pAnimationComponent->ResetCharacter();
+		m_pCharacterController->Physicalize();
+
+	}
+
+	m_pEntity->FreeSlot(1);
+
 	m_inputFlags = 0;
 	m_mouseDeltaRotation = ZERO;
 	m_mouseDeltaSmoothingFilter.Reset();

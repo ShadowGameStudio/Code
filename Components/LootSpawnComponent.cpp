@@ -41,17 +41,20 @@ void CLootSpawnComponent::ReflectType(Schematyc::CTypeDesc<CLootSpawnComponent>&
 
 }
 
+//Spawns the Item
 void CLootSpawnComponent::SpawnItems() {
 
 	if (GetProperties()->iLootRarity == 1) {
 
-		int *pLootAmount = &test;
+		int *pLootAmount = nullptr;
+		*pLootAmount = sCommonClasses.size();
+
 		string sClass = GetRandomClass(pLootAmount);
 
 		//Setup spawn params for the loot
 		SEntitySpawnParams spawnParams;
 
-		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass(sClass);
+		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
 		spawnParams.sName = sClass;
 		spawnParams.vPosition = m_pEntity->GetWorldPos();
 		spawnParams.vScale = Vec3(1, 1, 1);
@@ -59,8 +62,9 @@ void CLootSpawnComponent::SpawnItems() {
 		//Spawn the entity
 		if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
 
-			//fix so that this also gets class
+			if (sClass == "Test1")
 			pEntity->CreateComponentClass<CLootSpawnComponent>();
+
 		}
 
 	}
@@ -79,9 +83,10 @@ void CLootSpawnComponent::SpawnItems() {
 
 }
 
-string CLootSpawnComponent::GetRandomClass(int* classAmount) {
+//Gets the random item class for SpawnItems
+string CLootSpawnComponent::GetRandomClass(int *classAmount) {
 
-	int* pClassAmount = classAmount;
+	int *pClassAmount = classAmount;
 	
 	//Gets a random number
 	srand((unsigned int)time(NULL));

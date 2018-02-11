@@ -79,8 +79,13 @@ void CGamePlugin::OnSystemEvent(ESystemEvent event, UINT_PTR wparam, UINT_PTR lp
 bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 {
 	// Connection received from a client, create a player entity and component
+
+	IEntityClass *pPlayerClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("schematyc::players::player_main");
 	SEntitySpawnParams spawnParams;
-	spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+	if (!gEnv->IsEditor())
+		spawnParams.pClass = pPlayerClass;
+	else
+		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
 	spawnParams.sName = "Player";
 	spawnParams.nFlags |= ENTITY_FLAG_NEVER_NETWORK_STATIC;
 	
@@ -98,8 +103,8 @@ bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 		pPlayerEntity->GetNetEntity()->SetChannelId(channelId);
 		pPlayerEntity->GetNetEntity()->BindToNetwork();
 
-		// Create the player component instance
-		CPlayerComponent* pPlayer = pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
+		if (gEnv->IsEditor())
+			pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
 
 		// Push the component into our map, with the channel id as the key
 		m_players.emplace(std::make_pair(channelId, pPlayerEntity->GetId()));
@@ -118,7 +123,8 @@ bool CGamePlugin::OnClientReadyForGameplay(int channelId, bool bIsReset)
 		{
 			if (CPlayerComponent* pPlayer = pPlayerEntity->GetComponent<CPlayerComponent>())
 			{
-				pPlayer->Revive();
+				if (gEnv->IsEditor())
+					pPlayer->Revive();
 			}
 		}
 	}

@@ -12,23 +12,25 @@ Purpose : Vital Status is base class for various vital properties for living ent
 
 struct SVitalStatusComponent : public IEntityComponent {
 
-	struct SHealthProperties {
+	struct SProperties {
 
-		inline bool operator==(const SHealthProperties& rhs) const { return 0 == memcmp(this, &rhs, sizeof(rhs)); }
-		inline bool operator!=(const SHealthProperties& rhs) const { return 0 != memcmp(this, &rhs, sizeof(rhs)); }
+		inline bool operator==(const SProperties& rhs) const { return 0 == memcmp(this, &rhs, sizeof(rhs)); }
+		inline bool operator!=(const SProperties& rhs) const { return 0 != memcmp(this, &rhs, sizeof(rhs)); }
 
 		float fValue = 0.f;
+		float fLastValue = 0.f;
 		float fMax = 0.f;
 		float fRegenerationRatio = 0.f;
+		bool bAlwaysRegenerate = false;
 
-		static void ReflectType(Schematyc::CTypeDesc<SHealthProperties>& desc) {
+		static void ReflectType(Schematyc::CTypeDesc<SProperties>& desc) {
 
 
 			desc.SetGUID("{2CE67854-39E1-43B6-A383-C8A3FB33EE9A}"_cry_guid);
 			desc.SetLabel("Vital Properties");
 			desc.SetDescription("Vital Properties");
-			desc.AddMember(&SHealthProperties::fMax, 'fmax', "MaxValue", "Maximum value", "Maximum value", 100.f);
-			desc.AddMember(&SHealthProperties::fRegenerationRatio, 'freg', "RegenRatio", "Regeneration ratio", "Regeneration ratio", 0.02f);
+			desc.AddMember(&SProperties::fMax, 'fmax', "MaxValue", "Maximum value", "Maximum value", 100.f);
+			desc.AddMember(&SProperties::fRegenerationRatio, 'freg', "RegenRatio", "Regeneration ratio", "Regeneration ratio", 0.02f);
 
 		}
 
@@ -36,22 +38,27 @@ struct SVitalStatusComponent : public IEntityComponent {
 	SVitalStatusComponent() = default;
 
 	virtual void Initialize() override;
+	virtual void InitializeClass() = 0;
 	virtual uint64 GetEventMask() const override;
+	virtual void ProcessEvent(SEntityEvent& event) override;
+	virtual void ProcessClassEvent(SEntityEvent& event) = 0;
 	static void ReflectType(Schematyc::CTypeDesc<SVitalStatusComponent>& desc);
 
 	//Vitalsystem
 	void Regenerate();
-	void Add(float healthAmount) { props.fValue += healthAmount; }
-	void Set(float healthAmount) { props.fValue = healthAmount; }
+	void Add(float amount) { props.fValue += amount; }
+	void Set(float amount) { props.fValue = amount; }
 	void SetRegenerationRatio(float reg) { props.fRegenerationRatio = reg; }
+	void AlwaysRegenerate(bool alwaysRegenerate) { props.bAlwaysRegenerate = alwaysRegenerate; }
+	bool AlwaysRegenerate() { return props.bAlwaysRegenerate; }
 	float Get() { return props.fValue; }
 	float GetMax() { return props.fMax; }
 	float GetRegenerationRatio() { return props.fRegenerationRatio; }
-	SHealthProperties *GetProperties() { return &props; }
+	SProperties *GetProperties() { return &props; }
 
 protected:
 
-	SHealthProperties props;
-	SHealthProperties startProps;
+	SProperties props;
+	SProperties startProps;
 
 };

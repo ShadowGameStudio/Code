@@ -28,7 +28,7 @@ public:
 	static void ReflectType(Schematyc::CTypeDesc<CPlayAreaComponent>& desc);
 
 	void SpawnPlayArea();
-	void DecreseSpawnArea();
+	void DecreasePlayArea();
 	void Update(float frameTime);
 
 	int iTimesDecreased = 0;

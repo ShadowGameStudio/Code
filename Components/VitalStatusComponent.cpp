@@ -8,11 +8,18 @@ void SVitalStatusComponent::Initialize() {
 
 	props.fValue = props.fValue;
 	props = props;
+	InitializeClass();
 
 }
 
 uint64 SVitalStatusComponent::GetEventMask() const {
 	return BIT64(ENTITY_EVENT_UPDATE);
+}
+
+void SVitalStatusComponent::ProcessEvent(SEntityEvent & event) {
+
+	ProcessClassEvent(event);
+
 }
 
 void SVitalStatusComponent::ReflectType(Schematyc::CTypeDesc<SVitalStatusComponent>& desc) {
@@ -21,9 +28,27 @@ void SVitalStatusComponent::ReflectType(Schematyc::CTypeDesc<SVitalStatusCompone
 
 }
 
+//Regenerates health and/or Stamina
 void SVitalStatusComponent::Regenerate() {
 
-	if (props.fValue < props.fMax)
-		props.fValue += props.fRegenerationRatio;
+	bool bRegenerate = true;
+
+	//Check if it always should regenerate or not
+	//Such as regenerating while sprinting, otherwise it will not do that
+
+	if (!props.bAlwaysRegenerate) {
+
+		bRegenerate = props.fValue == props.fLastValue;
+		props.fLastValue = props.fValue;
+	
+	}
+
+	if (bRegenerate) {
+
+		if (props.fValue < props.fMax)
+			props.fValue += props.fRegenerationRatio;
+	
+	}
+
 
 }

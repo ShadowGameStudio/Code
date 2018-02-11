@@ -99,12 +99,13 @@ void CPlayAreaComponent::ReflectType(Schematyc::CTypeDesc<CPlayAreaComponent>& d
 
 }
 
+//Spawns the play area it self
 void CPlayAreaComponent::SpawnPlayArea() {
 
 	//Setup spawn params for play area
 	SEntitySpawnParams spawnParams;
 
-	spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("schematyc::Items::playArea");
+	spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
 	spawnParams.sName = "PlayArea";
 	spawnParams.vPosition = Vec3(540, 581, 34);
 	spawnParams.vScale = Vec3(fScaleX, fScaleY, fScaleZ);
@@ -118,7 +119,8 @@ void CPlayAreaComponent::SpawnPlayArea() {
 
 }
 
-void CPlayAreaComponent::DecreseSpawnArea() {
+//Makes the play area smaller over time
+void CPlayAreaComponent::DecreasePlayArea() {
 
 	//Decreases the size on the Play Area
 	//Makes sure that the Play Area only decreases by fDecreaseAmount every 1ms
@@ -140,7 +142,7 @@ void CPlayAreaComponent::Update(float frameTime) {
 	if (IEntity* pEntity = gEnv->pEntitySystem->FindEntityByName("PlayArea")) {
 			
 		if (CPlayAreaComponent *pPlayArea = pEntity->GetComponent<CPlayAreaComponent>()) {
-				pPlayArea->DecreseSpawnArea();
+				pPlayArea->DecreasePlayArea();
 		}
 
 	}

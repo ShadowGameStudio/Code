@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Player.h"
 #include "ItemComponent.h"
+#include "StaminaComponent.h"
 
 #define MOUSE_DELTA_TRESHOLD 0.0001f
 #define PICKUP_RANGE 0.5f
@@ -15,6 +16,7 @@ void CPlayerComponent::UpdateMovementRequest(float frameTime) {
 	float moveSpeed = 20.5f;
 	float sprintSpeed = 200.f;
 	const float mainSpeed = 20.5f;
+	const float fSprintCostRatio = 0.1f;
 
 	if (m_inputFlags & (TInputFlags)EInputFlag::MoveJump) {
 		jumpVel = 200.f;
@@ -28,16 +30,37 @@ void CPlayerComponent::UpdateMovementRequest(float frameTime) {
 	}
 	if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
 
-		if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint)
-			moveSpeed = sprintSpeed;
+		if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
+			//Links to stamina component
+			if (CStaminaComponent* pStamina = m_pEntity->GetComponent<CStaminaComponent>()) {
+				if (pStamina->Get() >= fSprintCostRatio)
+					moveSpeed = sprintSpeed;
+				else
+					m_inputFlags &= ~(TInputFlags)EInputFlag::MoveSprint;
+			}
+		}
 
 		velocity.y += moveSpeed * frameTime;
 	}
 	if (m_inputFlags & (TInputFlags)EInputFlag::MoveBack) {
 		velocity.y -= mainSpeed * frameTime;
 
-		if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward)
+		if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
+
+			m_inputFlags &= ~(TInputFlags)EInputFlag::MoveSprint;
 			velocity.y = 0.f;
+		}
+	}
+
+	//Removes from sprint value
+	if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
+		if (CStaminaComponent* pStamina = m_pEntity->GetComponent<CStaminaComponent>()) {
+			pStamina->Add(-fSprintCostRatio);
+		}
+	}
+
+	if (CStaminaComponent* pStamina = m_pEntity->GetComponent<CStaminaComponent>()) {
+		CryLogAlways("CURRENT STAMINA = %F", pStamina->Get());
 	}
 
 	m_pCharacterController->AddVelocity(GetEntity()->GetWorldRotation() * velocity);
@@ -152,7 +175,8 @@ void CPlayerComponent::UpdateFPCamera(float frameTime) {
 	Matrix34 localTransform = IDENTITY;
 	localTransform.SetRotation33(CCamera::CreateOrientationYPR(ypr));
 
-	const float viewOffsetForward = 0.1f;
+	//!Fix head cutting!
+	const float viewOffsetForward = 0.2f;
 	const float viewOffsetUp = fLeanDown;
 	const float viewOffsetSide = fLeanSide;
 
