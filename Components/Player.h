@@ -144,6 +144,7 @@ protected:
 	void Action_Attack(int activationMode);
 	void Action_Heal(int activationMode);
 	void Action_SpawnDome(int activationMode);
+	void Action_SpawnItem(int activationMode);
 
 	//Player specific methods
 

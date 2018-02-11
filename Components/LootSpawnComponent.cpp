@@ -15,13 +15,13 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterLootSpawnComponent)
 void CLootSpawnComponent::Initialize() {}
 
 uint64 CLootSpawnComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_LEVEL_LOADED);
+	return BIT64(ENTITY_EVENT_LEVEL_LOADED) | BIT64(ENTITY_EVENT_START_GAME);
 }
 
 void CLootSpawnComponent::ProcessEvent(SEntityEvent & event) {
 
 	switch (event.event) {
-	case ENTITY_EVENT_LEVEL_LOADED:
+	case ENTITY_EVENT_START_GAME:
 	
 		SpawnItems();
 

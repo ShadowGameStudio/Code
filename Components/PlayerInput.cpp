@@ -5,6 +5,8 @@
 #include "MeleeWeaponComponent.h"
 #include "HealthpackComponent.h"
 #include "PlayAreaComponent.h"
+#include "LootSpawnComponent.h"
+
 void CPlayerComponent::InitializeInput() {
 
 	// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
@@ -69,6 +71,9 @@ void CPlayerComponent::InitializeInput() {
 	m_pInputComponent->RegisterAction("player", "spawnDome", [this](int activationMode, float value) { Action_SpawnDome(activationMode); });
 	m_pInputComponent->BindAction("player", "spawnDome", eAID_KeyboardMouse, EKeyId::eKI_O);
 
+	m_pInputComponent->RegisterAction("player", "spawnItem", [this](int activationMode, float value) { Action_SpawnItem(activationMode); });
+	m_pInputComponent->BindAction("player", "spawnItem", eAID_KeyboardMouse, EKeyId::eKI_P);
+
 }
 
 void CPlayerComponent::HandleInputFlagChange(TInputFlags flags, int activationMode, EInputFlagType type) {
@@ -103,12 +108,8 @@ void CPlayerComponent::ActionUse(int activationMode) {
 	if (bFreezePlayer)
 		return;
 	if (activationMode == eIS_Pressed) {
-	
-		if (pTargetItem) {
-
+		if (pTargetItem)
 			PickUp(pTargetItem);
-
-		}
 
 	}
 
@@ -130,12 +131,8 @@ void CPlayerComponent::Action_DI(int activationMode) {
 	if (bFreezePlayer)
 		return;
 	if (activationMode == eIS_Pressed) {
-
-			if (SItemComponent *pSelectedItem = GetInventory()->GetSelectedItem()) {
-			
+			if (SItemComponent *pSelectedItem = GetInventory()->GetSelectedItem())
 				pSelectedItem->Drop();
-
-			}
 
 	}
 
@@ -297,6 +294,15 @@ void CPlayerComponent::Action_SpawnDome(int activationMode) {
 	CPlayAreaComponent PA;
 
 	if (activationMode == eIS_Pressed)
-	PA.SpawnPlayArea();
+		PA.SpawnPlayArea();
+
+}
+
+void CPlayerComponent::Action_SpawnItem(int activationMode) {
+
+	CLootSpawnComponent LS;
+
+	if (activationMode == eIS_Pressed)
+		LS.SpawnItems();
 
 }
