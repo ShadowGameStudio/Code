@@ -53,17 +53,15 @@ void CLootSpawnComponent::SpawnItems() {
 
 		//Setup spawn params for the loot
 		SEntitySpawnParams spawnParams;
+		IEntityClass *pItemClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass(sClass);
 
-		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+		spawnParams.pClass = pItemClass;
 		spawnParams.sName = sClass;
 		spawnParams.vPosition = m_pEntity->GetWorldPos();
 		spawnParams.vScale = Vec3(1, 1, 1);
 
 		//Spawn the entity
 		if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
-
-			if (sClass == "Test1")
-			pEntity->CreateComponentClass<CLootSpawnComponent>();
 
 		}
 

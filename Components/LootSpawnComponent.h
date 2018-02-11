@@ -17,7 +17,7 @@ class CLootSpawnComponent : public IEntityComponent {
 public:
 	CLootSpawnComponent() = default;
 
-	std::vector<string> sCommonClasses = {"Test1", "Test2"};
+	std::vector<string> sCommonClasses = {"schematyc::items::test", "Test2"};
 	std::vector<string> sUncommonClasses = {"test4"};
 	std::vector<string> sRareClasses = {"test3"};
 	std::vector<string> sRarerClasses = {"test2"};
