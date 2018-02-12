@@ -5,7 +5,6 @@
 #include "MeleeWeaponComponent.h"
 #include "HealthpackComponent.h"
 #include "PlayAreaComponent.h"
-#include "LootSpawnComponent.h"
 
 void CPlayerComponent::InitializeInput() {
 
@@ -70,9 +69,6 @@ void CPlayerComponent::InitializeInput() {
 
 	m_pInputComponent->RegisterAction("player", "spawnDome", [this](int activationMode, float value) { Action_SpawnDome(activationMode); });
 	m_pInputComponent->BindAction("player", "spawnDome", eAID_KeyboardMouse, EKeyId::eKI_O);
-
-	m_pInputComponent->RegisterAction("player", "spawnItem", [this](int activationMode, float value) { Action_SpawnItem(activationMode); });
-	m_pInputComponent->BindAction("player", "spawnItem", eAID_KeyboardMouse, EKeyId::eKI_P);
 
 }
 
@@ -295,14 +291,5 @@ void CPlayerComponent::Action_SpawnDome(int activationMode) {
 
 	if (activationMode == eIS_Pressed)
 		PA.SpawnPlayArea();
-
-}
-
-void CPlayerComponent::Action_SpawnItem(int activationMode) {
-
-	CLootSpawnComponent LS;
-
-	if (activationMode == eIS_Pressed)
-		LS.SpawnItems();
 
 }
