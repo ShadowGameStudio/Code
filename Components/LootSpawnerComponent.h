@@ -34,6 +34,10 @@ public:
 
 	//arrays
 	std::vector<string> sCommonClasses = { "schematyc::items::test" };
+	std::vector<string> sUncommonClasses = { "test" };
+	std::vector<string> sRareClasses = { "test2" };
+	std::vector<string> sRarerClasses = { "test3" };
+	std::vector<string> sURareClasses = { "test4" };
 	//~arrays
 
 	CLootSpawnerComponent() = default;
@@ -48,6 +52,10 @@ public:
 	string GetRandomClass(int* classAmount);
 
 	int sCommonClassAmount = sCommonClasses.size();
+	int sUncommonClassAmount = sUncommonClasses.size();
+	int sRareClassAmount = sRareClasses.size();
+	int sRarerClassAmount = sRarerClasses.size();
+	int sURareClassAmount = sURareClasses.size();
 	bool bIsSpawned = false;
 
 protected:

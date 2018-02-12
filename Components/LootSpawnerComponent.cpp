@@ -49,25 +49,35 @@ void CLootSpawnerComponent::SpawnItem() {
 
 	if (!bIsSpawned) {
 
-		if (GetProperties()->iLootRarity == 1) {
+		int *pLootAmount = nullptr;
 
-			int *pLootAmount = &sCommonClassAmount;
-			string sClass = GetRandomClass(pLootAmount);
+		//Checks what loot rarity it is
+		if (GetProperties()->iLootRarity == 1)
+			pLootAmount = &sCommonClassAmount;
+		else if (GetProperties()->iLootRarity == 2)
+			pLootAmount = &sUncommonClassAmount;
+		else if (GetProperties()->iLootRarity == 3)
+			pLootAmount = &sRareClassAmount;
+		else if (GetProperties()->iLootRarity == 4)
+			pLootAmount = &sRarerClassAmount;
+		else if (GetProperties()->iLootRarity == 5)
+			pLootAmount = &sURareClassAmount;
 
-			//Setup spawn params
-			SEntitySpawnParams spawnParams;
-			IEntityClass *pItemClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass(sClass);
+		string sClass = GetRandomClass(pLootAmount);
 
-			spawnParams.pClass = pItemClass;
-			spawnParams.sName = "test";
-			spawnParams.vPosition = Vec3(574, 516, 34);
-			spawnParams.vScale = Vec3(10, 10, 10);
+		//Setup spawn params
+		SEntitySpawnParams spawnParams;
+		IEntityClass *pItemClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass(sClass);
 
-			//Spawning item
-			if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
-				bIsSpawned = true;
-			}
-		}
+		spawnParams.pClass = pItemClass;
+		spawnParams.sName = "test";
+		spawnParams.vPosition = Vec3(574, 516, 34);
+		spawnParams.vScale = Vec3(10, 10, 10);
+
+		//Spawning item
+		if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams))
+			bIsSpawned = true;
+
 	}
 }
 
@@ -77,11 +87,19 @@ string CLootSpawnerComponent::GetRandomClass(int *classAmount) {
 
 	//Gets a random number
 	srand((unsigned int)time(NULL));
-	int RandIndex = rand() % *pClassAmount;
+	int iRandIndex = rand() % *pClassAmount;
 
 	//Gets the class and returns the class string
 	if (GetProperties()->iLootRarity == 1)
-		return sCommonClasses[RandIndex];
+		return sCommonClasses[iRandIndex];
+	else if (GetProperties()->iLootRarity == 2)
+		return sUncommonClasses[iRandIndex];
+	else if (GetProperties()->iLootRarity == 3)
+		return sRareClasses[iRandIndex];
+	else if (GetProperties()->iLootRarity == 4)
+		return sRarerClasses[iRandIndex];
+	else if (GetProperties()->iLootRarity == 5)
+		return sURareClasses[iRandIndex];
 	else
 		return string();
 }
