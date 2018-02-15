@@ -34,7 +34,7 @@ public:
 
 	//arrays
 	std::vector<string> sCommonClasses = { "schematyc::items::test" };
-	std::vector<string> sUncommonClasses = { "test" };
+	std::vector<string> sUncommonClasses = { "schematyc::items::Backpack" };
 	std::vector<string> sRareClasses = { "test2" };
 	std::vector<string> sRarerClasses = { "test3" };
 	std::vector<string> sURareClasses = { "test4" };

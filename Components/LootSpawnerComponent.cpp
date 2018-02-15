@@ -18,14 +18,14 @@ void CLootSpawnerComponent::Initialize() {}
 
 //Gets different events
 uint64 CLootSpawnerComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_LEVEL_LOADED);
+	return BIT64(ENTITY_EVENT_START_LEVEL);
 }
 
 //Checks if the events have been called
 void CLootSpawnerComponent::ProcessEvent(SEntityEvent & event) {
 
 	switch (event.event) {
-	case ENTITY_EVENT_LEVEL_LOADED:
+	case ENTITY_EVENT_START_LEVEL:
 		SpawnItem();
 		break;
 	}

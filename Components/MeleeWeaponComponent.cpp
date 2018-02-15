@@ -22,30 +22,27 @@ void CMeleeWeaponComponent::ProcessEventClass(SEntityEvent & event) {
 
 		if (pOwnerEntity) {
 
-		EventPhysCollision * physCollision = reinterpret_cast<EventPhysCollision *>(event.nParam[0]);
-		if (physCollision) {
+			EventPhysCollision * physCollision = reinterpret_cast<EventPhysCollision *>(event.nParam[0]);
+			if (physCollision) {
 
-			//This Entity
-			IPhysicalEntity *pThisEntityPhysics = physCollision->pEntity[0];
-			IEntity *pThisEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pThisEntityPhysics);
-			IPhysicalEntity *pColliderPhysics = physCollision->pEntity[1];
-			IEntity *pColliderEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pColliderPhysics);
+				//This Entity
+				IPhysicalEntity *pThisEntityPhysics = physCollision->pEntity[0];
+				IEntity *pThisEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pThisEntityPhysics);
+				IPhysicalEntity *pColliderPhysics = physCollision->pEntity[1];
+				IEntity *pColliderEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pColliderPhysics);
 
-			if (pColliderEntity && pColliderEntity != m_pEntity && pColliderEntity != pOwnerEntity) {
+				if (pColliderEntity && pColliderEntity != m_pEntity && pColliderEntity != pOwnerEntity) {
 
-				if (CHealthComponent *pVictimHealth = pColliderEntity->GetComponent<CHealthComponent>()) {
+					if (CHealthComponent *pVictimHealth = pColliderEntity->GetComponent<CHealthComponent>()) {
 
-					if (pVictimHealth->IsAlive() && bIsAttacking) {
-						bIsAttacking = false;
-						pVictimHealth->Add((-props.fDamage));
+						if (pVictimHealth->IsAlive() && bIsAttacking) {
+							bIsAttacking = false;
+							pVictimHealth->Add((-props.fDamage));
+						}
 					}
 				}
-
 			}
-
 		}
-
-	}
 
 		break;
 

@@ -1,10 +1,11 @@
 #pragma once
+#include "ItemComponent.h"
+#include "WeaponComponent.h"
 
 ////////////////////////////////////////////////////////
 // Physicalized bullet shot from weaponry, expires on collision with another object
 ////////////////////////////////////////////////////////
-class CBulletComponent final : public IEntityComponent
-{
+class CBulletComponent final : public IEntityComponent {
 public:
 	virtual ~CBulletComponent() {}
 
@@ -52,16 +53,39 @@ public:
 	}
 
 	virtual uint64 GetEventMask() const override { return BIT64(ENTITY_EVENT_COLLISION); }
-	virtual void ProcessEvent(SEntityEvent& event) override
-	{
-		// Handle the OnCollision event, in order to have the entity removed on collision
-		if (event.event == ENTITY_EVENT_COLLISION)
-		{
-			// Collision info can be retrieved using the event pointer
-			//EventPhysCollision *physCollision = reinterpret_cast<EventPhysCollision *>(event.ptr);
+	virtual void ProcessEvent(SEntityEvent& event) override {
 
-			// Queue removal of this entity, unless it has already been done
+		switch (event.event) {
+		case ENTITY_EVENT_COLLISION:
+
 			gEnv->pEntitySystem->RemoveEntity(GetEntityId());
+
+			EventPhysCollision *physCollision = reinterpret_cast<EventPhysCollision *>(event.nParam[0]);
+			if (physCollision) {
+
+				IPhysicalEntity *pThisEntityPhysics = physCollision->pEntity[0];
+				IEntity *pThisEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pThisEntityPhysics);
+				IPhysicalEntity *pColliderPhysics = physCollision->pEntity[1];
+				IEntity *pColliderEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pColliderPhysics);
+
+				if (pColliderEntity && pColliderEntity != m_pEntity && pColliderEntity) {
+
+					if (CHealthComponent *pVicitmHealth = pColliderEntity->GetComponent<CHealthComponent>()) {
+
+						//Fix so that it gets the player that is shootings weapon
+						if (true) {
+
+						}
+
+						if (pVicitmHealth->IsAlive()) {
+							pVicitmHealth->Add(())
+						}
+
+					}
+					else
+						return;
+
+			break;
 		}
 
 	}
