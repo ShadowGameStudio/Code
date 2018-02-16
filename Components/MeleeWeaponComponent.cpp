@@ -37,7 +37,7 @@ void CMeleeWeaponComponent::ProcessEventClass(SEntityEvent & event) {
 
 						if (pVictimHealth->IsAlive() && bIsAttacking) {
 							bIsAttacking = false;
-							pVictimHealth->Add((-props.fDamage));
+					//		pVictimHealth->Add((-props.fDamage));
 						}
 					}
 				}
