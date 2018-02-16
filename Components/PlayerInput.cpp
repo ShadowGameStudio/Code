@@ -242,24 +242,53 @@ void CPlayerComponent::Action_LeanLeft(int activationMode) {
 
 void CPlayerComponent::Action_Attack(int activationMode) {
 
+	pPlayerAttacking = m_pEntity->GetComponent<CPlayerComponent>();
+
 	if (bFreezePlayer || activationMode == eIS_Down)
 		return;
 
 	if (SItemComponent *pSelectedItem = m_pInventoryComponent->GetSelectedItem()) {
 
-		if (CMeleeWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CMeleeWeaponComponent>()) {
+		//Checks if it is a weapon or not
+		if (pSelectedItem->GetItemType() == 2 || 4) {
 
-			if (activationMode == eIS_Pressed) {
-				pSelectedWeapon->StartAttack();
-			}
-			else if (activationMode == eIS_Released) {
-				pSelectedWeapon->StopAttack();
+			//Shoots while button is pressed down
+			//Add so that you only can shoot while enough ammo is in magazine
+			while (activationMode == eIS_Pressed) {
+				
+			//	QuatTS bulletOrigin = pBarrelOutAttachment->GetAttWorldAbsolute();
+
+				SEntitySpawnParams spawnParams;
+				spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+				//spawnParams.vPosition = bulletOrigin.t;
+				//spawnParams.qRotation = bulletOrigin.q;
+
+				const float bulletScale = 0.05f;
+				spawnParams.vScale = Vec3(bulletScale);
+
+				// Spawn the entity
+				if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
+					//creates the bullet and sets the player shooting
+					pEntity->CreateComponentClass<CBulletComponent>();
+					if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
+						pBullet->SetPlayer(pPlayerAttacking);
+				}
 			}
 
 		}
+		else {
+		
+			if (CMeleeWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CMeleeWeaponComponent>()) {
 
+				if (activationMode == eIS_Pressed) {
+					pSelectedWeapon->StartAttack();
+				}
+				else if (activationMode == eIS_Released) {
+					pSelectedWeapon->StopAttack();
+				}
+			}	
+		}
 	}
-
 }
 
 void CPlayerComponent::Action_Heal(int activationMode) { 

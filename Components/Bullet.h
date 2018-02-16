@@ -1,10 +1,15 @@
 #pragma once
+#include "HealthComponent.h"
+#include "Player.h"
 
 ////////////////////////////////////////////////////////
 // Physicalized bullet shot from weaponry, expires on collision with another object
 ////////////////////////////////////////////////////////
-class CBulletComponent final : public IEntityComponent
-{
+class CBulletComponent final : public IEntityComponent {
+protected:
+
+	CPlayerComponent *pPlayerShooting = nullptr;
+
 public:
 	virtual ~CBulletComponent() {}
 
@@ -44,25 +49,46 @@ public:
 			pPhysics->Action(&impulseAction);
 		}
 	}
-
-	// Reflect type to set a unique identifier for this component
 	static void ReflectType(Schematyc::CTypeDesc<CBulletComponent>& desc)
 	{
 		desc.SetGUID("{B53A9A5F-F27A-42CB-82C7-B1E379C41A2A}"_cry_guid);
 	}
-
 	virtual uint64 GetEventMask() const override { return BIT64(ENTITY_EVENT_COLLISION); }
-	virtual void ProcessEvent(SEntityEvent& event) override
-	{
+	virtual void ProcessEvent(SEntityEvent& event) override {
 		// Handle the OnCollision event, in order to have the entity removed on collision
-		if (event.event == ENTITY_EVENT_COLLISION)
-		{
-			// Collision info can be retrieved using the event pointer
-			//EventPhysCollision *physCollision = reinterpret_cast<EventPhysCollision *>(event.ptr);
+	
+		switch (event.event) {
+		case ENTITY_EVENT_COLLISION:
+			
+			EventPhysCollision *physCollision = reinterpret_cast<EventPhysCollision *>(event.nParam[0]);
+			if (physCollision) {
 
-			// Queue removal of this entity, unless it has already been done
-			gEnv->pEntitySystem->RemoveEntity(GetEntityId());
+				IPhysicalEntity *pThisEntityPhysics = physCollision->pEntity[0];
+				IEntity *pThisEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pThisEntityPhysics);
+				IPhysicalEntity *pColliderPhysics = physCollision->pEntity[1];
+				IEntity *pColliderEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pColliderPhysics);
+
+				//Gets the player, the players inventory, the weapon he's holding and the damage the weapon does
+				//After that it damages the shot player
+				if (pColliderEntity && pColliderEntity != m_pEntity && pColliderEntity) {
+					if (CHealthComponent *pVictimHealth = pColliderEntity->GetComponent<CHealthComponent>()) {
+						if (pVictimHealth->IsAlive()) {
+							if (SItemComponent *pSelectedWeapon = pPlayerShooting->GetInventory()->GetSelectedItem()) {
+								pVictimHealth->Add((-pSelectedWeapon->GetItemDamage()));
+							}
+						}
+					}
+				}
+			}
+			break;
 		}
+	}
+
+	//Sets the player, called every time the bullet has been created
+	void SetPlayer(CPlayerComponent *pPlayer) {
+
+		pPlayerShooting = pPlayer;
+
 	}
 	// ~IEntityComponent
 };

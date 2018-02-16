@@ -62,7 +62,9 @@ public:
 	void SetItemSlot(SItemComponent *pItemToMove, int slotId);
 	void SetQuickAccessItemSlot(SItemComponent *pItemToMove, int slotId);
 
-	SItemComponent *GetSelectedItem() { return pSelectedItem; }
+	SItemComponent *GetSelectedItem() { 
+			return pSelectedItem; 
+	}
 
 	void Show();
 

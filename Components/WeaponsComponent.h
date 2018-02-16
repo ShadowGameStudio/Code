@@ -20,14 +20,12 @@ public:
 	CWeaponsComponent() = default;
 
 	virtual void InitializeClass() override;
-	virtual uint64 GetEventMask() const override;
-	virtual void ProcessEvent(SEntityEvent& event) override;
+	virtual void ProcessEventClass(SEntityEvent& event) override;
 	static void ReflectType(Schematyc::CTypeDesc<CWeaponsComponent>& desc);
-	float GetDamage() const { return sWeaponProperties.fDamage; }
-	float GetBulletDrop() const { return sWeaponProperties.fBulletDrop; }
-	int GetMaxAmmo() const { return sWeaponProperties.iMaxAmmo; }
-	int GetClipAmmo() const { return sWeaponProperties.iClipAmmo; }
-	Schematyc::CSharedString GetAmmoType() const { return sWeaponProperties.sAmmoType; }
+	float GetBulletDrop() { return GetWeaponProperties()->fBulletDrop; }
+	int GetMaxAmmo() { return GetWeaponProperties()->iMaxAmmo; }
+	int GetClipAmmo() { return GetWeaponProperties()->iClipAmmo; }
+	Schematyc::CSharedString GetAmmoType() { return GetWeaponProperties()->sAmmoType; }
 	SWeaponProperties* GetWeaponProperties() { return &sWeaponProperties; }
 
 protected:

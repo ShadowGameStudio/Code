@@ -25,7 +25,6 @@ static void ReflectType(Schematyc::CTypeDesc<SWeaponProperties>& desc) {
 	desc.AddMember(&SWeaponProperties::iClipAmmo, 'icam', "ClipAmmo", "Clip Ammo", "Sets the ammo in every magazine", 0);
 	desc.AddMember(&SWeaponProperties::iMaxAmmo, 'imam', "MaxAmmo", "Max Ammo", "Sets the maximum amount of ammo you can have for this weapon", 0);
 	desc.AddMember(&SWeaponProperties::fBulletDrop, 'fbdp', "BulletDrop", "Bullet Drop", "Sets the bullet drop for the item", 0.f);
-	desc.AddMember(&SWeaponProperties::fDamage, 'fdam', "Damage", "Damage", "Sets the amount of damage done by weapon", 0.f);
 	desc.AddMember(&SWeaponProperties::sAmmoType, 'saty', "AmmotType", "Ammo Type", "Sets the ammo type that the weapon will be using", "");
 
 }
