@@ -94,6 +94,9 @@ class CPlayerComponent final : public IEntityComponent
 		T m_accumulator;
 	};
 
+	const EEntityAspects kMovementAspect = eEA_GameClientD;
+	const EEntityAspects kRotationAspect = eEA_GameClientA;
+
 public:
 	CPlayerComponent() = default;
 	virtual ~CPlayerComponent() {}
@@ -101,7 +104,9 @@ public:
 	// IEntityComponent
 	virtual void Initialize() override;
 	void InitializeInput();
-
+	//NetworkInit
+	void LocalPlayerInitialize();
+	//
 	virtual uint64 GetEventMask() const override;
 	virtual void ProcessEvent(SEntityEvent& event) override;
 	// ~IEntityComponent
@@ -112,9 +117,9 @@ public:
 	void Revive();
 
 	//Getting components
-
 	CInventoryComponent *GetInventory() { return m_pInventoryComponent; }
 	Cry::DefaultComponents::CAdvancedAnimationComponent* GetAnimations() { return m_pAnimationComponent; }
+	//
 
 	void FreezePlayer(bool freeze) { bFreezePlayer = freeze; }
 	void AttachToBack(SItemComponent *pWeaponToAttach, int slotId);
@@ -132,8 +137,12 @@ protected:
 
 	void HandleInputFlagChange(TInputFlags flags, int activationMode, EInputFlagType type = EInputFlagType::Hold);
 
-	//Player actions
+	//Network functions, vars
+	virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags);
+	virtual NetworkAspectType GetNetSerializeAspectMask() const { return kMovementAspect; }
+	//
 
+	//Player actions
 	void ActionUse(int activationMode);
 	void Action_InventoryToggle(int activationMode);
 	void Action_DI(int activationMode);
@@ -144,10 +153,11 @@ protected:
 	void Action_Attack(int activationMode);
 	void Action_Heal(int activationMode);
 	void Action_SpawnDome(int activationMode);
+	//
 
 	//Player specific methods
-
 	void PickUp(SItemComponent *pNewItem);
+	//
 
 protected:
 	Cry::DefaultComponents::CCameraComponent* m_pCameraComponent = nullptr;

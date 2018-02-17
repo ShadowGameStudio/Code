@@ -18,7 +18,7 @@ void CLootSpawnerComponent::Initialize() {}
 
 //Gets different events
 uint64 CLootSpawnerComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_START_LEVEL);
+	return BIT64(ENTITY_EVENT_START_LEVEL) | BIT64(ENTITY_EVENT_LEVEL_LOADED);
 }
 
 //Checks if the events have been called
@@ -28,7 +28,14 @@ void CLootSpawnerComponent::ProcessEvent(SEntityEvent & event) {
 	case ENTITY_EVENT_START_LEVEL:
 		SpawnItem();
 		break;
+
+	case ENTITY_EVENT_LEVEL_LOADED:
+		if (gEnv->IsEditor()) 
+			SpawnItem();
+
+		break;
 	}
+
 
 }
 

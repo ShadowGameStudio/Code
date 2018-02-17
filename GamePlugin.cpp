@@ -86,6 +86,7 @@ bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 		spawnParams.pClass = pPlayerClass;
 	else
 		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+	string sName = string().Format("Player%" PRISIZE_T, m_players.size());
 	spawnParams.sName = "Player";
 	spawnParams.nFlags |= ENTITY_FLAG_NEVER_NETWORK_STATIC;
 	
@@ -99,12 +100,12 @@ bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 	// Spawn the player entity
 	if (IEntity* pPlayerEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams))
 	{
+		if (gEnv->IsEditor())
+			pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
+
 		// Set the local player entity channel id, and bind it to the network so that it can support Multiplayer contexts
 		pPlayerEntity->GetNetEntity()->SetChannelId(channelId);
 		pPlayerEntity->GetNetEntity()->BindToNetwork();
-
-		if (gEnv->IsEditor())
-			pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
 
 		// Push the component into our map, with the channel id as the key
 		m_players.emplace(std::make_pair(channelId, pPlayerEntity->GetId()));

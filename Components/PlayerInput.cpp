@@ -30,7 +30,11 @@ void CPlayerComponent::InitializeInput() {
 	m_pInputComponent->RegisterAction("player", "movejump", [this](int activationMode, float value) { HandleInputFlagChange((TInputFlags)EInputFlag::MoveJump, activationMode); });
 	m_pInputComponent->BindAction("player", "movejump", eAID_KeyboardMouse, EKeyId::eKI_Space);
 
-	m_pInputComponent->RegisterAction("player", "mouse_rotateyaw", [this](int activationMode, float value) {if (bFreezePlayer) return; m_mouseDeltaRotation.x -= value; });
+	m_pInputComponent->RegisterAction("player", "mouse_rotateyaw", [this](int activationMode, float value) 
+	{
+		if (bFreezePlayer) return; m_mouseDeltaRotation.x -= value;
+		NetMarkAspectsDirty(kRotationAspect);
+	});
 	m_pInputComponent->BindAction("player", "mouse_rotateyaw", eAID_KeyboardMouse, EKeyId::eKI_MouseX);
 
 	m_pInputComponent->RegisterAction("player", "mouse_rotatepitch", [this](int activationMode, float value) { if (bFreezePlayer) return;  m_mouseDeltaRotation.y -= value; });
@@ -96,6 +100,11 @@ void CPlayerComponent::HandleInputFlagChange(TInputFlags flags, int activationMo
 	}
 	break;
 	}
+
+	if (!gEnv->bServer) {
+		NetMarkAspectsDirty(kMovementAspect);
+	}
+
 }
 
 void CPlayerComponent::ActionUse(int activationMode) {

@@ -26,8 +26,6 @@ void CPlayerComponent::Initialize()
 
 	if (gEnv->IsEditor()) {
 
-		m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
-
 		m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
 		m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
 
@@ -45,24 +43,28 @@ void CPlayerComponent::Initialize()
 	
 	}
 
-
-	InitializeInput();
-
-	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
-
 	if(gEnv->IsEditor())
 		Revive();
+
+	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
 }
 
 uint64 CPlayerComponent::GetEventMask() const
 {
-	return BIT64(ENTITY_EVENT_START_GAME) | BIT64(ENTITY_EVENT_UPDATE) | BIT64(ENTITY_EVENT_TIMER);
+	return BIT64(ENTITY_EVENT_START_GAME) | BIT64(ENTITY_EVENT_UPDATE) | BIT64(ENTITY_EVENT_TIMER) | BIT64(ENTITY_EVENT_NET_BECOME_LOCAL_PLAYER);
 }
 
 void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 {
 	switch (event.event)
 	{
+
+	case ENTITY_EVENT_NET_BECOME_LOCAL_PLAYER:
+	{
+		LocalPlayerInitialize();
+	}
+	break;
+
 	case ENTITY_EVENT_START_GAME:
 	{
 		// Revive the entity when gameplay starts
@@ -85,23 +87,32 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 
 		if (m_pCameraComponent && m_pAnimationComponent && m_pCharacterController) {
 
-		UpdateMovementRequest(pCtx->fFrameTime);
+		if(gEnv->bServer)
+			UpdateMovementRequest(pCtx->fFrameTime);
+		
+		if(!gEnv->bServer)
 		UpdateLookDirectionRequest(pCtx->fFrameTime);
+		
 		UpdateAnimation(pCtx->fFrameTime);
 
-		if (bIsTP)
-			UpdateCamera(pCtx->fFrameTime);
-		else
-			UpdateFPCamera(pCtx->fFrameTime);
+		if (m_pCameraComponent) {
 
-		Update(pCtx->fFrameTime);
+			if (bIsTP)
+				UpdateCamera(pCtx->fFrameTime);
+			else
+				UpdateFPCamera(pCtx->fFrameTime);
 
+			Update(pCtx->fFrameTime);
+
+			}
 		}
 
 		if (!bIsInitialized) {
 			if (!gEnv->IsEditor()) {
 
-				m_pCameraComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CCameraComponent>();
+				if (!gEnv->bServer)
+					m_pCameraComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CCameraComponent>();
+				
 				m_pCharacterController = m_pEntity->GetComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
 				m_pAnimationComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
 
@@ -163,6 +174,7 @@ void CPlayerComponent::Revive()
 	m_lookOrientation = IDENTITY;
 	m_horizontalAngularVelocity = 0.0f;
 	m_averagedHorizontalAngularVelocity.Reset();
+
 
 }
 
@@ -256,4 +268,52 @@ void CPlayerComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slotId)
 
 	}
 
+}
+
+bool CPlayerComponent::NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) {
+	
+	if (aspect == kMovementAspect) {
+
+		ser.BeginGroup("PlayerInput");
+
+		auto inputs = m_inputFlags;
+		auto prevState = m_inputFlags;
+
+		ser.Value("m_inputFlags", m_inputFlags, 'ui8');
+
+		if (ser.IsReading()) {
+
+			auto changedKeys = inputs ^ m_inputFlags;
+			auto pressedKeys = changedKeys & inputs;
+
+			if (pressedKeys != 0) {
+				HandleInputFlagChange(pressedKeys, eIS_Pressed);
+			}
+
+			auto releasedKeys = changedKeys & prevState;
+			if (releasedKeys != 0) {
+				HandleInputFlagChange(pressedKeys, eIS_Released);
+			}
+		}
+
+		ser.Value("m_lookOrientation", m_lookOrientation, 'ori3');
+		ser.EndGroup();
+
+	}
+	if (aspect == kRotationAspect) {
+
+		CryLogAlways("Player is rotating");
+		ser.BeginGroup("PlayerRotation");
+		ser.Value("m_lookOrientation", m_lookOrientation, 'ori3');
+		ser.EndGroup();
+
+	}
+	return true;
+}
+
+void CPlayerComponent::LocalPlayerInitialize() {
+
+	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
+	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
+	InitializeInput(); 
 }
