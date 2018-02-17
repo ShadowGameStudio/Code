@@ -12,7 +12,6 @@ Purpose : Inventory System will allow the player to store items.
 #include <CryEntitySystem/IEntityComponent.h>
 #include "steam\steam_api.h"
 #include "FlashUI\FlashUI.h"
-#include "WeaponComponent.h"
 
 #define INVENTORY_CAPACITY 20
 #define WEAPON_CAPACITY 2
@@ -36,46 +35,46 @@ public:
 	//Inventory System
 
 	int GetItemSlot(SItemComponent *pNewItem);
-	int GetWeaponSlot(CWeaponComponent *pNewItem);
-	int GetQuickAccessSlot(CWeaponComponent *pNewItem);
+	int GetQuickAccessSlot(SItemComponent *pNewItem);
 	SItemComponent *GetItem(int slot);
-	CWeaponComponent *GetQuickAccessItem(int slot);
+	SItemComponent *GetQuickAccessItem(int slot);
 
 	bool AddItem(SItemComponent *pNewItem);
 	bool AddItem(int slot, SItemComponent *pNewItem);
-	bool AddItemQuickAccess(CWeaponComponent *pNewItem);
-	bool AddItemQuickAccess(int slot, CWeaponComponent *pNewItem);
+	bool AddItemQuickAccess(SItemComponent *pNewItem);
+	bool AddItemQuickAccess(int slot, SItemComponent *pNewItem);
 
 	void RemoveItem(SItemComponent *pNewItem);
 	void RemoveItem(int slot);
-	void RemoveItemQuickAccess(CWeaponComponent *pNewItem);
+	void RemoveItemQuickAccess(SItemComponent *pNewItem);
 	void RemoveItemQuickAccess(int slot);
 
-	void AttachToBack(CWeaponComponent *pWeaponToAttach, int slotID);
+	void AttachToBack(SItemComponent *pItemToAttach, int slotID);
 	void DetachFromBack(int slotID);
-	void Attach(CWeaponComponent *pWeaponToAttach);
+	void Attach(SItemComponent *pWeaponToAttach);
 
 	void AttachBackpack(SItemComponent *pItemToAttach, int slotID);
 	void DetachBackpackBack(int slotID);
-	void AttachToHand(CWeaponComponent *pItemToAttach);
+	void AttachToHand(SItemComponent *pItemToAttach);
 	void DetachFromHand();
 
 	void SelectSlot(int slotId);
-	void SetQuickAccessItemSlot(CWeaponComponent *pItemToMove, int slotId);
+	void SetItemSlot(SItemComponent *pItemToMove, int slotId);
+	void SetQuickAccessItemSlot(SItemComponent *pItemToMove, int slotId);
 
-	CWeaponComponent *GetSelectedItem() { return pSelectedWeapon; }
+	SItemComponent *GetSelectedItem() { return pSelectedItem; }
 
 	void Show();
 
 protected:
 
-	void SelectItem(CWeaponComponent *pItemToSelect);
+	void SelectItem(SItemComponent *pItemToSelect);
 	void DeselectItem();
 
 private:
 
 	SItemComponent *pItem[INVENTORY_CAPACITY] = { nullptr };
-	CWeaponComponent *pQuickAccess[WEAPON_CAPACITY] = { nullptr };
+	SItemComponent *pQuickAccess[WEAPON_CAPACITY] = { nullptr };
 
 	//UI Stuff
 
@@ -88,7 +87,7 @@ private:
 
 	//Item selection
 
-	CWeaponComponent *pSelectedWeapon = nullptr;
+	SItemComponent *pSelectedItem = nullptr;
 
 public:
 

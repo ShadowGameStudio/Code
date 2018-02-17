@@ -43,24 +43,7 @@ int CInventoryComponent::GetItemSlot(SItemComponent * pNewItem) {
 	return -1;
 }
 
-int CInventoryComponent::GetWeaponSlot(CWeaponComponent * pNewItem) {
-
-	if (!pNewItem)
-		return -1;
-
-	for (int i = 0; i < WEAPON_CAPACITY; i++) {
-
-		if (pQuickAccess[i] == pNewItem) {
-
-			return i;
-
-		}
-	}
-
-	return -1;
-}
-
-int CInventoryComponent::GetQuickAccessSlot(CWeaponComponent * pNewItem) {
+int CInventoryComponent::GetQuickAccessSlot(SItemComponent * pNewItem) {
 	
 	if (!pNewItem)
 		return -1;
@@ -77,7 +60,7 @@ int CInventoryComponent::GetQuickAccessSlot(CWeaponComponent * pNewItem) {
 	return -1;
 }
 
-SItemComponent *CInventoryComponent::GetItem(int slot) {
+SItemComponent * CInventoryComponent::GetItem(int slot) {
 	
 	if (slot < 0)
 		return nullptr;
@@ -86,7 +69,7 @@ SItemComponent *CInventoryComponent::GetItem(int slot) {
 
 }
 
-CWeaponComponent *CInventoryComponent::GetQuickAccessItem(int slot) {
+SItemComponent * CInventoryComponent::GetQuickAccessItem(int slot) {
 	
 	if (slot < 0)
 		return nullptr;
@@ -167,7 +150,7 @@ bool CInventoryComponent::AddItem(int slot, SItemComponent * pNewItem) {
 
 }
 
-bool CInventoryComponent::AddItemQuickAccess(CWeaponComponent * pNewItem) {
+bool CInventoryComponent::AddItemQuickAccess(SItemComponent * pNewItem) {
 
 	if (!pNewItem)
 		return false;
@@ -194,7 +177,7 @@ bool CInventoryComponent::AddItemQuickAccess(CWeaponComponent * pNewItem) {
 
 }
 
-bool CInventoryComponent::AddItemQuickAccess(int slot, CWeaponComponent * pNewItem) {
+bool CInventoryComponent::AddItemQuickAccess(int slot, SItemComponent * pNewItem) {
 	
 	if (!pNewItem)
 		return false;
@@ -242,7 +225,7 @@ void CInventoryComponent::RemoveItem(int slot) {
 
 }
 
-void CInventoryComponent::RemoveItemQuickAccess(CWeaponComponent * pNewItem) {
+void CInventoryComponent::RemoveItemQuickAccess(SItemComponent * pNewItem) {
 
 	if (!pNewItem)
 		return;
@@ -253,7 +236,11 @@ void CInventoryComponent::RemoveItemQuickAccess(CWeaponComponent * pNewItem) {
 
 		pQuickAccess[index] = nullptr;
 
+		if (pNewItem->GetItemType() == 2 || 4) {
+
 			DetachFromBack(index);
+
+		}
 
 	}
 
@@ -269,17 +256,16 @@ void CInventoryComponent::RemoveItemQuickAccess(int slot) {
 
 }
 
-//Attaches a weapon to the back
-void CInventoryComponent::AttachToBack(CWeaponComponent *pWeaponToAttach, int slotID) {
+void CInventoryComponent::AttachToBack(SItemComponent * pItemToAttach, int slotID) {
 
-	if (!pWeaponToAttach || slotID < 0)
+	if (!pItemToAttach || slotID < 0)
 		return;
 
 	string slotString = ToString(slotID);
 	CPlayerComponent *player = m_pEntity->GetComponent<CPlayerComponent>();
 
 	CEntityAttachment *attachmentItem = new CEntityAttachment();
-	attachmentItem->SetEntityId(pWeaponToAttach->GetEntityId());
+	attachmentItem->SetEntityId(pItemToAttach->GetEntityId());
 
 	if (ICharacterInstance *pCharacter = player->GetAnimations()->GetCharacter()) {
 	
@@ -298,7 +284,6 @@ void CInventoryComponent::AttachToBack(CWeaponComponent *pWeaponToAttach, int sl
 
 }
 
-//Detaches an attached weapon from back
 void CInventoryComponent::DetachFromBack(int slotID) {
 
 	if (slotID < 0)
@@ -324,12 +309,16 @@ void CInventoryComponent::DetachFromBack(int slotID) {
 
 }
 
-void CInventoryComponent::Attach(CWeaponComponent *pWeaponToAttach) {
+void CInventoryComponent::Attach(SItemComponent * pWeaponToAttach) {
 
 	for (int i = 0; i < WEAPON_CAPACITY; i++) {
 
+		if (pWeaponToAttach->GetItemType() == 2 || 4) {
+
 			pWeaponToAttach->GetEntity()->DetachThis();
 			AttachToBack(pWeaponToAttach, i);
+
+		}
 
 	}
 
@@ -389,7 +378,7 @@ void CInventoryComponent::DetachBackpackBack(int slotID) {
 
 }
 
-void CInventoryComponent::AttachToHand(CWeaponComponent * pItemToAttach) {
+void CInventoryComponent::AttachToHand(SItemComponent * pItemToAttach) {
 
 	if (!pItemToAttach)
 		return;
@@ -441,7 +430,7 @@ void CInventoryComponent::SelectSlot(int slotId) {
 	if (slotId < 0)
 		return;
 
-	CWeaponComponent *pSavedSelectedItem = pSelectedWeapon;
+	SItemComponent *pSavedSelectedItem = pSelectedItem;
 	DeselectItem();
 
 	if (pSavedSelectedItem != pQuickAccess[slotId])
@@ -449,16 +438,34 @@ void CInventoryComponent::SelectSlot(int slotId) {
 
 }
 
-void CInventoryComponent::SetQuickAccessItemSlot(CWeaponComponent * pItemToMove, int slotId) {}
+void CInventoryComponent::SetItemSlot(SItemComponent * pItemToMove, int slotId) {
 
-void CInventoryComponent::SelectItem(CWeaponComponent * pItemToSelect) {
+	if (!pItemToMove || slotId < 0)
+		return;
+
+	int curSlot = GetItemSlot(pItemToMove);
+	int curQuickSlot = GetQuickAccessSlot(pItemToMove);
+
+	if (curSlot > -1) {
+		pItem[slotId] = pItem[curSlot];
+		pItem[curSlot] = nullptr;
+	} else if (curQuickSlot > -1) {
+		pItem[slotId] = pQuickAccess[curSlot];
+		pQuickAccess[curSlot] = nullptr;
+	}
+
+}
+
+void CInventoryComponent::SetQuickAccessItemSlot(SItemComponent * pItemToMove, int slotId) {}
+
+void CInventoryComponent::SelectItem(SItemComponent * pItemToSelect) {
 
 	if (!pItemToSelect)
 		return;
 
 	DetachFromBack(GetQuickAccessSlot(pItemToSelect));
 
-	pSelectedWeapon = pItemToSelect;
+	pSelectedItem = pItemToSelect;
 
 	AttachToHand(pItemToSelect);
 
@@ -466,14 +473,14 @@ void CInventoryComponent::SelectItem(CWeaponComponent * pItemToSelect) {
 
 void CInventoryComponent::DeselectItem() {
 
-	if (!pSelectedWeapon)
+	if (!pSelectedItem)
 		return;
 
 	DetachFromHand(); 
 
-	AttachToBack(pSelectedWeapon, GetWeaponSlot(pSelectedWeapon));
+	AttachToBack(pSelectedItem, GetItemSlot(pSelectedItem));
 
-	pSelectedWeapon = nullptr;
+	pSelectedItem = nullptr;
 
 }
 

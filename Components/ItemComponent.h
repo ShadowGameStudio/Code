@@ -32,7 +32,6 @@ public:
 
 	virtual int GetItemType() { return GetProperties()->itemType; }
 	virtual float GetItemWeight() { return GetProperties()->itemWeight; }
-	virtual float GetItemDamage() { return GetProperties()->fItemDamage; }
 
 	virtual void PickUp(IEntity *pNewOwner);
 	virtual void Drop();

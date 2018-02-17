@@ -2,7 +2,6 @@
 #include "Player.h"
 #include "Bullet.h"
 #include "ItemComponent.h"
-#include "MeleeWeaponComponent.h"
 #include "HealthpackComponent.h"
 #include "PlayAreaComponent.h"
 
@@ -248,13 +247,21 @@ void CPlayerComponent::Action_Attack(int activationMode) {
 		return;
 
 	if (SItemComponent *pSelectedItem = m_pInventoryComponent->GetSelectedItem()) {
-		if (CMeleeWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CMeleeWeaponComponent>()) {
-
-			if (activationMode == eIS_Pressed) {
-				pSelectedWeapon->StartAttack();
+		if (CWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CWeaponComponent>()) {
+			if (pSelectedWeapon->GetWeaponProperties()->bIsMeele) {
+				if (activationMode == eIS_Pressed) {
+					pSelectedWeapon->StartAttack();
+				}
+				else if (activationMode == eIS_Released) {
+					pSelectedWeapon->StopAttack();
+				}
 			}
-			else if (activationMode == eIS_Released) {
-				pSelectedWeapon->StopAttack();
+			else {
+
+				while (activationMode == eIS_Pressed) {
+					pSelectedWeapon->Shoot();
+				}
+
 			}
 		}	
 	}
