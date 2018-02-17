@@ -241,27 +241,42 @@ void CPlayerComponent::Action_LeanLeft(int activationMode) {
 
 void CPlayerComponent::Action_Attack(int activationMode) {
 
-	pPlayerAttacking = m_pEntity->GetComponent<CPlayerComponent>();
-
-	if (bFreezePlayer || activationMode == eIS_Down)
-		return;
-
 	if (SItemComponent *pSelectedItem = m_pInventoryComponent->GetSelectedItem()) {
 		if (CWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CWeaponComponent>()) {
-			if (pSelectedWeapon->GetWeaponProperties()->bIsMeele) {
-				if (activationMode == eIS_Pressed) {
+			//Check if weapon is meele
+			if (pSelectedWeapon->GetIsMeele()) {
+				
+				if (bFreezePlayer || activationMode == eIS_Down)
+					return;
+				
+				else if (activationMode == eIS_Pressed) {
 					pSelectedWeapon->StartAttack();
 				}
 				else if (activationMode == eIS_Released) {
 					pSelectedWeapon->StopAttack();
 				}
 			}
+			//Else if weapon is non-meele
 			else {
 
-				while (activationMode == eIS_Pressed) {
-					pSelectedWeapon->Shoot();
-				}
+				CPlayerComponent *pPlayer = m_pEntity->GetComponent<CPlayerComponent>();
 
+				//If firemode is automatic
+				if (pSelectedWeapon->GetFiremodeProperties()->bIsAuto) {
+					while (activationMode == eIS_Down) {
+						pSelectedWeapon->SetPlayer(pPlayer);
+						pSelectedWeapon->Shoot();
+					}
+				}
+				//If firemode is semi-auto or single, because they do the same thing
+				else if (pSelectedWeapon->GetFiremodeProperties()->bIsSemi || pSelectedWeapon->GetFiremodeProperties()->bIsSingle) {
+					if (activationMode == eIS_Pressed) {
+						pSelectedWeapon->SetPlayer(pPlayer);
+						pSelectedWeapon->Shoot();
+					}
+				}
+				else
+					return;
 			}
 		}	
 	}

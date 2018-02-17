@@ -119,8 +119,6 @@ public:
 	void FreezePlayer(bool freeze) { bFreezePlayer = freeze; }
 	void AttachToBack(SItemComponent *pWeaponToAttach, int slotId);
 
-	CPlayerComponent *pPlayerAttacking = nullptr;
-
 protected:
 	void UpdateMovementRequest(float frameTime);
 	void UpdateLookDirectionRequest(float frameTime);

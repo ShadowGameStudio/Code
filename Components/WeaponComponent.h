@@ -34,6 +34,31 @@ class CWeaponComponent : public SItemComponent {
 			desc.AddMember(&SWeaponProperties::iClipAmmo, 'icla', "ClipAmmo", "Clip Ammo", "Sets the amount of ammo in a magazine", 0);
 			desc.AddMember(&SWeaponProperties::iMaxAmmo, 'imax', "MaxAmmo", "Max Ammo", "Max amount of ammo you can carry for this weapon", 0);
 			desc.AddMember(&SWeaponProperties::sBulletType, 'sbut', "BulletType", "Bullet Type", "Sets the bullet type", "");
+			desc.AddMember(&SWeaponProperties::sBulletType, 'sbut', "BulletType", "Bullet Type", "Sets the bullet type", "");
+
+		}
+
+	};
+
+	struct SFiremodeProperties {
+
+		inline bool operator==(const SFiremodeProperties& rhs) const { return 0 == memcmp(this, &rhs, sizeof(rhs)); }
+		inline bool operator!=(const SFiremodeProperties& rhs) const { return 0 != memcmp(this, &rhs, sizeof(rhs)); }
+
+		bool bIsAuto;
+		int iFireRate;
+		bool bIsSemi;
+		bool bIsSingle;
+
+		static void ReflectType(Schematyc::CTypeDesc<SFiremodeProperties>& desc) {
+
+			desc.SetGUID("{7F766352-CC30-43B3-B606-05F2C9201A0A}"_cry_guid);
+			desc.SetLabel("Firemode Properties");
+			desc.SetDescription("The different properties for firemodes(not used if IsMeele). You can choose multiple");
+			desc.AddMember(&SFiremodeProperties::bIsAuto, 'bisa', "IsAutomatic", "Is Automatic", "Check if weapon should have automatic fire", false);
+			desc.AddMember(&SFiremodeProperties::iFireRate, 'ifra', "FireRate", "Fire Rate", "Input at what rate you want the weapon to fire", 0);
+			desc.AddMember(&SFiremodeProperties::bIsSemi, 'biss', "IsSemi", "Is Semi-Automatic", "Check if weapon should have semi-automatic fire", false);
+			desc.AddMember(&SFiremodeProperties::bIsSingle, 'bis', "IsSingle", "Is Single", "Check if weapon should have single fire", false);
 
 		}
 
@@ -57,17 +82,22 @@ public:
 
 	//Non-meele weapon specific
 	void Shoot();
+	void Reload();
+	void SetPlayer(CPlayerComponent *pPlayer);
 
 	//Meele weapon specific
 	void StartAttack();
 	void StopAttack();
 
 	SWeaponProperties *GetWeaponProperties() { return &sWeaponProperties; }
+	SFiremodeProperties *GetFiremodeProperties() { return &sFiremodeProperties; }
 
 private:
 	bool bIsAttacking = false;
 
 protected:
 	SWeaponProperties sWeaponProperties;
+	SFiremodeProperties sFiremodeProperties;
+	CPlayerComponent *pPlayerShooting = nullptr;
 
 };

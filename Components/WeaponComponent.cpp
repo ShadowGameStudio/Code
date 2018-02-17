@@ -69,17 +69,53 @@ void CWeaponComponent::ReflectType(Schematyc::CTypeDesc<CWeaponComponent>& desc)
 	desc.SetDescription("Handles all the weapon logic");
 	desc.AddMember(&CWeaponComponent::sItemProperties, 'itep', "ItemProperties", "Item Properties", "Sets all of the weapon properties", SItemProperties());
 	desc.AddMember(&CWeaponComponent::sWeaponProperties, 'weap', "WeaponProperties", "Weapon Properties", "All of the different propeties for the weapon", SWeaponProperties());
+	desc.AddMember(&CWeaponComponent::sFiremodeProperties, 'feap', "FiremodeProperties", "Firemode Properties", "Sets all of the firemode properties", SFiremodeProperties());
 
 }
 
 //Shoots weapon if it is non-meele
 void CWeaponComponent::Shoot() {
 
-	if (GetWeaponProperties()->bIsMeele) {
+	if (!GetWeaponProperties()->bIsMeele) {
+		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>() ) {
+			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {
 
-		//!Add shooting here!
+				auto *pBarrelOutAttachment = pCharacter->GetIAttachmentManager()->GetInterfaceByName("barrel_out");
+
+				if (pBarrelOutAttachment != nullptr) {
+
+					QuatTS bulletOrigin = pBarrelOutAttachment->GetAttWorldAbsolute();
+					SEntitySpawnParams spawnParams;
+
+					spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+					spawnParams.vPosition = bulletOrigin.t;
+					spawnParams.qRotation = bulletOrigin.q;
+					
+					const float bulletScale = 0.05f;
+					spawnParams.vScale = Vec3(bulletScale);
+
+					//Spawn the actual entity
+					if (IEntity *pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
+						
+						//Adds Bullet Component to Entity
+						pEntity->CreateComponentClass<CBulletComponent>();
+						if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
+							pBullet->SetPlayer(pPlayerShooting);
+
+					}
+
+				}
+
+			}
+		}
 
 	}
+}
+
+void CWeaponComponent::Reload() {}
+
+void CWeaponComponent::SetPlayer(CPlayerComponent *pPlayer) {
+	pPlayerShooting = pPlayer;
 }
 
 //Starting meele attack
