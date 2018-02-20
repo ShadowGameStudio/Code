@@ -94,8 +94,7 @@ class CPlayerComponent final : public IEntityComponent
 		T m_accumulator;
 	};
 
-	const EEntityAspects kMovementAspect = eEA_GameClientD;
-	const EEntityAspects kRotationAspect = eEA_GameClientA;
+	const EEntityAspects kInputAspect = eEA_GameClientD;
 
 public:
 	CPlayerComponent() = default;
@@ -104,9 +103,6 @@ public:
 	// IEntityComponent
 	virtual void Initialize() override;
 	void InitializeInput();
-	//NetworkInit
-	void LocalPlayerInitialize();
-	//
 	virtual uint64 GetEventMask() const override;
 	virtual void ProcessEvent(SEntityEvent& event) override;
 	// ~IEntityComponent
@@ -124,6 +120,11 @@ public:
 	void FreezePlayer(bool freeze) { bFreezePlayer = freeze; }
 	void AttachToBack(SItemComponent *pWeaponToAttach, int slotId);
 
+	//Network functions, vars
+	void LocalPlayerInitialize();
+	virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) override;
+	virtual NetworkAspectType GetNetSerializeAspectMask() const { return kInputAspect; }
+
 protected:
 	void UpdateMovementRequest(float frameTime);
 	void UpdateLookDirectionRequest(float frameTime);
@@ -137,13 +138,9 @@ protected:
 
 	void HandleInputFlagChange(TInputFlags flags, int activationMode, EInputFlagType type = EInputFlagType::Hold);
 
-	//Network functions, vars
-	virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags);
-	virtual NetworkAspectType GetNetSerializeAspectMask() const { return kMovementAspect; }
-	//
 
 	//Player actions
-	void ActionUse(int activationMode);
+	void Action_Use(int activationMode);
 	void Action_InventoryToggle(int activationMode);
 	void Action_DI(int activationMode);
 	void Action_SelectSlot(int activationMode, int slotId);

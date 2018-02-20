@@ -12,7 +12,12 @@ static void RegisterWeapon(Schematyc::IEnvRegistrar& registrar) {
 }
 CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterWeapon)
 
-void CWeaponComponent::InitializeClass() {}
+void CWeaponComponent::InitializeClass() {
+
+	SRmi<RMI_WRAP(&CWeaponComponent::SvShoot)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
+	SRmi<RMI_WRAP(&CWeaponComponent::ClShoot)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
+
+}
 
 void CWeaponComponent::ProcessEventClass(SEntityEvent & event) {
 
@@ -74,8 +79,7 @@ void CWeaponComponent::ReflectType(Schematyc::CTypeDesc<CWeaponComponent>& desc)
 }
 
 //Shoots weapon if it is non-meele
-void CWeaponComponent::Shoot() {
-
+bool CWeaponComponent::ClShoot(NoParams&& p, INetChannel *) {
 	if (!GetWeaponProperties()->bIsMeele) {
 		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>() ) {
 			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {
@@ -110,6 +114,9 @@ void CWeaponComponent::Shoot() {
 		}
 
 	}
+
+	return true;
+
 }
 
 void CWeaponComponent::Reload() {}

@@ -8,6 +8,7 @@
 #include <CryRenderer/IRenderAuxGeom.h>
 #include "ItemComponent.h"
 #include "InventoryComponent.h"
+#include "CryNetwork\Rmi.h"
 
 static void RegisterPlayer(Schematyc::IEnvRegistrar& registrar) {
 	Schematyc::CEnvRegistrationScope scope = registrar.Scope(IEntity::GetEntityScopeGUID());
@@ -24,6 +25,10 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterPlayer)
 void CPlayerComponent::Initialize()
 {
 
+	// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
+	m_pInputComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CInputComponent>();
+
+	//Player creation if in editor
 	if (gEnv->IsEditor()) {
 
 		m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
@@ -43,10 +48,18 @@ void CPlayerComponent::Initialize()
 	
 	}
 
-	if(gEnv->IsEditor())
+	if (gEnv->IsEditor()) {
 		Revive();
+		m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
+	}
+}
 
-	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
+void CPlayerComponent::LocalPlayerInitialize() {
+
+	//Init local player components
+	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
+	InitializeInput();
+	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
 }
 
 uint64 CPlayerComponent::GetEventMask() const
@@ -59,17 +72,17 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 	switch (event.event)
 	{
 
-	case ENTITY_EVENT_NET_BECOME_LOCAL_PLAYER:
-	{
-		LocalPlayerInitialize();
-	}
-	break;
-
 	case ENTITY_EVENT_START_GAME:
 	{
 		// Revive the entity when gameplay starts
 		if(gEnv->IsEditor())
 			Revive();
+	}
+	break;
+
+	case ENTITY_EVENT_NET_BECOME_LOCAL_PLAYER:
+	{
+		LocalPlayerInitialize();
 	}
 	break;
 
@@ -85,34 +98,12 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 	{
 		SEntityUpdateContext* pCtx = (SEntityUpdateContext*)event.nParam[0];
 
-		if (m_pCameraComponent && m_pAnimationComponent && m_pCharacterController) {
-
-		if(gEnv->bServer)
-			UpdateMovementRequest(pCtx->fFrameTime);
-		
-		if(!gEnv->bServer)
-		UpdateLookDirectionRequest(pCtx->fFrameTime);
-		
-		UpdateAnimation(pCtx->fFrameTime);
-
-		if (m_pCameraComponent) {
-
-			if (bIsTP)
-				UpdateCamera(pCtx->fFrameTime);
-			else
-				UpdateFPCamera(pCtx->fFrameTime);
-
-			Update(pCtx->fFrameTime);
-
-			}
-		}
-
 		if (!bIsInitialized) {
 			if (!gEnv->IsEditor()) {
 
-				if (!gEnv->bServer)
-					m_pCameraComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CCameraComponent>();
-				
+				// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
+				m_pInputComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CInputComponent>();
+
 				m_pCharacterController = m_pEntity->GetComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
 				m_pAnimationComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
 
@@ -131,9 +122,29 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 				if (m_pCameraComponent && m_pAnimationComponent && m_pCharacterController) {
 					bIsInitialized = true;
 					Revive();
+					m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
 				}
 
 			}
+		}
+
+		if (gEnv->bServer)
+			UpdateMovementRequest(pCtx->fFrameTime);
+		
+		if (!gEnv->bServer)
+			UpdateLookDirectionRequest(pCtx->fFrameTime);
+		
+		UpdateAnimation(pCtx->fFrameTime);
+
+		if (m_pCameraComponent) {
+
+			if (bIsTP)
+				UpdateCamera(pCtx->fFrameTime);
+			else
+				UpdateFPCamera(pCtx->fFrameTime);
+
+			Update(pCtx->fFrameTime);
+
 		}
 	}
 	break;
@@ -268,52 +279,4 @@ void CPlayerComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slotId)
 
 	}
 
-}
-
-bool CPlayerComponent::NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) {
-	
-	if (aspect == kMovementAspect) {
-
-		ser.BeginGroup("PlayerInput");
-
-		auto inputs = m_inputFlags;
-		auto prevState = m_inputFlags;
-
-		ser.Value("m_inputFlags", m_inputFlags, 'ui8');
-
-		if (ser.IsReading()) {
-
-			auto changedKeys = inputs ^ m_inputFlags;
-			auto pressedKeys = changedKeys & inputs;
-
-			if (pressedKeys != 0) {
-				HandleInputFlagChange(pressedKeys, eIS_Pressed);
-			}
-
-			auto releasedKeys = changedKeys & prevState;
-			if (releasedKeys != 0) {
-				HandleInputFlagChange(pressedKeys, eIS_Released);
-			}
-		}
-
-		ser.Value("m_lookOrientation", m_lookOrientation, 'ori3');
-		ser.EndGroup();
-
-	}
-	if (aspect == kRotationAspect) {
-
-		CryLogAlways("Player is rotating");
-		ser.BeginGroup("PlayerRotation");
-		ser.Value("m_lookOrientation", m_lookOrientation, 'ori3');
-		ser.EndGroup();
-
-	}
-	return true;
-}
-
-void CPlayerComponent::LocalPlayerInitialize() {
-
-	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
-	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
-	InitializeInput(); 
 }

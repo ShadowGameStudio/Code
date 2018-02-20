@@ -10,6 +10,11 @@ Purpose : Handels all the weapon logic
 
 #include <CryEntitySystem/IEntityComponent.h>
 #include "ItemComponent.h"
+#include "CryNetwork\Rmi.h"
+
+struct NoParams {
+	void SerializeWith(TSerialize ser) {}
+};
 
 class CWeaponComponent : public SItemComponent {
 
@@ -81,9 +86,18 @@ public:
 	float GetDamage() { return GetWeaponProperties()->fDamage; }
 
 	//Non-meele weapon specific
-	void Shoot();
 	void Reload();
 	void SetPlayer(CPlayerComponent *pPlayer);
+	void Shoot(){ SRmi<RMI_WRAP(&CWeaponComponent::SvShoot)>::InvokeOnServer(this, NoParams{}); }
+
+	//Network
+	//Client
+	bool ClShoot(NoParams&& p, INetChannel *);
+	//Server
+	bool SvShoot(NoParams&& p, INetChannel *) { 
+		SRmi<RMI_WRAP(&CWeaponComponent::ClShoot)>::InvokeOnAllClients(this, NoParams{});
+		return true; 
+	}
 
 	//Meele weapon specific
 	void StartAttack();

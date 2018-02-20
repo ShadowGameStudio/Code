@@ -7,9 +7,6 @@
 
 void CPlayerComponent::InitializeInput() {
 
-	// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
-	m_pInputComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CInputComponent>();
-
 	// Register an action, and the callback that will be sent when it's triggered
 	m_pInputComponent->RegisterAction("player", "moveleft", [this](int activationMode, float value) { HandleInputFlagChange((TInputFlags)EInputFlag::MoveLeft, activationMode);  });
 	// Bind the 'A' key the "moveleft" action
@@ -33,14 +30,18 @@ void CPlayerComponent::InitializeInput() {
 	m_pInputComponent->RegisterAction("player", "mouse_rotateyaw", [this](int activationMode, float value) 
 	{
 		if (bFreezePlayer) return; m_mouseDeltaRotation.x -= value;
-		NetMarkAspectsDirty(kRotationAspect);
+		NetMarkAspectsDirty(kInputAspect);
 	});
 	m_pInputComponent->BindAction("player", "mouse_rotateyaw", eAID_KeyboardMouse, EKeyId::eKI_MouseX);
 
-	m_pInputComponent->RegisterAction("player", "mouse_rotatepitch", [this](int activationMode, float value) { if (bFreezePlayer) return;  m_mouseDeltaRotation.y -= value; });
+	m_pInputComponent->RegisterAction("player", "mouse_rotatepitch", [this](int activationMode, float value) 
+	{ 
+		if (bFreezePlayer) return;  m_mouseDeltaRotation.y -= value; 
+		NetMarkAspectsDirty(kInputAspect);
+	});
 	m_pInputComponent->BindAction("player", "mouse_rotatepitch", eAID_KeyboardMouse, EKeyId::eKI_MouseY);
 
-	m_pInputComponent->RegisterAction("player", "use", [this](int activationMode, float value) { ActionUse(activationMode); });
+	m_pInputComponent->RegisterAction("player", "use", [this](int activationMode, float value) { Action_Use(activationMode); });
 	m_pInputComponent->BindAction("player", "use", eAID_KeyboardMouse, EKeyId::eKI_F);
 
 	m_pInputComponent->RegisterAction("player", "inv_toggle", [this](int activationMode, float value) { Action_InventoryToggle(activationMode); });
@@ -102,12 +103,45 @@ void CPlayerComponent::HandleInputFlagChange(TInputFlags flags, int activationMo
 	}
 
 	if (!gEnv->bServer) {
-		NetMarkAspectsDirty(kMovementAspect);
+		NetMarkAspectsDirty(kInputAspect);
 	}
 
 }
 
-void CPlayerComponent::ActionUse(int activationMode) {
+bool CPlayerComponent::NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) {
+
+	if (aspect == kInputAspect) {
+
+		ser.BeginGroup("PlayerInput");
+
+		auto inputs = m_inputFlags;
+		auto prevState = m_inputFlags;
+
+		ser.Value("m_inputFlags", m_inputFlags, 'ui8');
+
+		if (ser.IsReading()) {
+
+			auto changedKeys = inputs ^ m_inputFlags;
+
+			auto pressedKeys = changedKeys & inputs;
+			if (pressedKeys != 0) {
+				HandleInputFlagChange(pressedKeys, eIS_Pressed);
+			}
+
+			auto releasedKeys = changedKeys & prevState;
+			if (releasedKeys != 0) {
+				HandleInputFlagChange(pressedKeys, eIS_Released);
+			}
+		}
+
+		ser.Value("m_lookOrientation", m_lookOrientation, 'ori3');
+		ser.EndGroup();
+
+	}
+	return true;
+}
+
+void CPlayerComponent::Action_Use(int activationMode) {
 
 	if (bFreezePlayer)
 		return;
@@ -249,7 +283,6 @@ void CPlayerComponent::Action_LeanLeft(int activationMode) {
 }
 
 void CPlayerComponent::Action_Attack(int activationMode) {
-
 	if (SItemComponent *pSelectedItem = m_pInventoryComponent->GetSelectedItem()) {
 		if (CWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CWeaponComponent>()) {
 			//Check if weapon is meele

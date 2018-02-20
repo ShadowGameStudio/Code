@@ -84,6 +84,8 @@ public:
 					}
 				}
 
+				gEnv->pEntitySystem->RemoveEntity(GetEntityId());
+
 			}
 			break;
 		}

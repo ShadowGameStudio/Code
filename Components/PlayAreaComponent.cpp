@@ -34,6 +34,8 @@ void CPlayAreaComponent::Initialize() {
 	//Set max view distance
 	GetEntity()->SetViewDistRatio(255);
 
+	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
+
 }
 
 uint64 CPlayAreaComponent::GetEventMask() const {
@@ -118,7 +120,10 @@ void CPlayAreaComponent::SpawnPlayArea() {
 	//Spawn the entity
 	if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
 
+		//Adds PlayAreaComponent to entity
 		pEntity->CreateComponentClass<CPlayAreaComponent>();
+		//Bind to network
+		pEntity->GetNetEntity()->BindToNetwork();
 
 	}
 
@@ -143,7 +148,7 @@ void CPlayAreaComponent::DecreasePlayArea() {
 
 void CPlayAreaComponent::Update(float frameTime) {
 
-	//Calls the decrease Play Area function every frame
+	//Calls DecreasePlayArea every frame
 	if (IEntity* pEntity = gEnv->pEntitySystem->FindEntityByName("PlayArea")) {
 			
 		if (CPlayAreaComponent *pPlayArea = pEntity->GetComponent<CPlayAreaComponent>()) {
