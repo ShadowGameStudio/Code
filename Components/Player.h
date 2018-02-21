@@ -14,6 +14,16 @@
 #include <DefaultComponents/Input/InputComponent.h>
 #include "InventoryComponent.h"
 #include "HealthpackComponent.h"
+#include "StaminaComponent.h"
+#include "HealthComponent.h"
+
+struct StaminaParams {
+
+	float playerStamina;
+	void SerializeWith(TSerialize ser){
+		ser.Value("stamina", playerStamina);
+	}
+};
 
 ////////////////////////////////////////////////////////
 // Represents a player participating in gameplay
@@ -124,6 +134,11 @@ public:
 	void LocalPlayerInitialize();
 	virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) override;
 	virtual NetworkAspectType GetNetSerializeAspectMask() const { return kInputAspect; }
+	//RMI
+	bool SvStamina(StaminaParams&& p, INetChannel *);
+	//Vars
+	float m_svPlayerStamina;
+	//
 
 protected:
 	void UpdateMovementRequest(float frameTime);
@@ -154,6 +169,7 @@ protected:
 
 	//Player specific methods
 	void PickUp(SItemComponent *pNewItem);
+	void SetPlayerParams();
 	//
 
 protected:
@@ -162,8 +178,8 @@ protected:
 	Cry::DefaultComponents::CAdvancedAnimationComponent* m_pAnimationComponent = nullptr;
 	Cry::DefaultComponents::CInputComponent* m_pInputComponent = nullptr;
 	CInventoryComponent *m_pInventoryComponent = nullptr;
-	CHealthpackComponent *m_pHealthPackComponent = nullptr;
 	CHealthComponent *m_pHealthComponent = nullptr;
+	CStaminaComponent *m_pStaminaComponent = nullptr;
 
 	FragmentID m_idleFragmentId;
 	FragmentID m_walkFragmentId;
@@ -186,6 +202,7 @@ protected:
 
 	const float m_rotationSpeed = 0.002f;
 	int m_cameraJointId = 5;
+	float m_playerStamina;
 
 	bool bIsInitialized = false;
 	bool bIsLeaned = false;

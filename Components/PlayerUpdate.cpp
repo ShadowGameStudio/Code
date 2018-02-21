@@ -16,7 +16,7 @@ void CPlayerComponent::UpdateMovementRequest(float frameTime) {
 	float moveSpeed = 20.5f;
 	float sprintSpeed = 200.f;
 	const float mainSpeed = 20.5f;
-	const float fSprintCostRatio = 0.1f;
+	const float fSprintCostRatio = 1.f;
 
 	if (m_inputFlags & (TInputFlags)EInputFlag::MoveJump) {
 		jumpVel = 200.f;
@@ -31,13 +31,10 @@ void CPlayerComponent::UpdateMovementRequest(float frameTime) {
 	if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
 
 		if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
-			//Links to stamina component
-			if (CStaminaComponent* pStamina = m_pEntity->GetComponent<CStaminaComponent>()) {
-				if (pStamina->Get() >= fSprintCostRatio)
-					moveSpeed = sprintSpeed;
-				else
-					m_inputFlags &= ~(TInputFlags)EInputFlag::MoveSprint;
-			}
+			if (m_svPlayerStamina > fSprintCostRatio)
+				moveSpeed = sprintSpeed;
+			else
+				moveSpeed = mainSpeed;
 		}
 
 		velocity.y += moveSpeed * frameTime;
@@ -54,14 +51,11 @@ void CPlayerComponent::UpdateMovementRequest(float frameTime) {
 
 	//Removes from sprint value
 	if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
-		if (CStaminaComponent* pStamina = m_pEntity->GetComponent<CStaminaComponent>()) {
-			pStamina->Add(-fSprintCostRatio);
-		}
+			m_pStaminaComponent->Remove(fSprintCostRatio);
 	}
 
-	if (CStaminaComponent* pStamina = m_pEntity->GetComponent<CStaminaComponent>()) {
-		CryLogAlways("CURRENT STAMINA = %F", pStamina->Get());
-	}
+	CryLogAlways("CURRENT STAMINA = %F", m_svPlayerStamina);
+
 
 	m_pCharacterController->AddVelocity(GetEntity()->GetWorldRotation() * velocity);
 }
@@ -193,8 +187,7 @@ void CPlayerComponent::UpdateFPCamera(float frameTime) {
 
 void CPlayerComponent::Update(float frameTime) {
 
-	//picking up
-
+	//Pick up message
 	Vec3 pickupOrigin = m_pEntity->GetWorldPos() + (m_pEntity->GetForwardDir() * PICKUP_RANGE);
 	IPhysicalEntity **pEntityList = NULL;
 	int num = gEnv->pEntitySystem->GetPhysicalEntitiesInBox(pickupOrigin, PICKUP_RANGE, pEntityList);

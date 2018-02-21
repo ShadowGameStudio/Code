@@ -10,6 +10,17 @@ Purpose : Base structure for items. All types of items will derive from here.
 
 #include <CryEntitySystem/IEntityComponent.h>
 #include "ItemProperties.h"
+#include "CryNetwork\Rmi.h"
+
+struct PickUpParams {
+
+	IEntity *pNewOwner = nullptr;
+
+	void SerializeWith(TSerialize ser) {
+		ser.Value("pNewOwner", pNewOwner);
+	}
+
+};
 
 struct SItemComponent : public IEntityComponent {
 public:
@@ -33,9 +44,19 @@ public:
 	virtual int GetItemType() { return GetProperties()->itemType; }
 	virtual float GetItemWeight() { return GetProperties()->itemWeight; }
 
-	virtual void PickUp(IEntity *pNewOwner);
+	virtual void PickUp(IEntity *pNewOwner) { SRmi<RMI_WRAP(&SItemComponent::SvPickUp)>::InvokeOnServer(this, PickUpParams{ pNewOwner }); }
 	virtual void Drop();
 	virtual bool IsPickable();
+
+	//Network
+	//RMI
+	//Client
+	bool ClPickUp(PickUpParams&& p, INetChannel *);
+	//Server
+	bool SvPickUp(PickUpParams&& p, INetChannel *) {
+		SRmi<RMI_WRAP(&SItemComponent::ClPickUp)>::InvokeOnAllClients(this, PickUpParams{ p.pNewOwner });
+	};
+	//
 
 protected:
 	SItemProperties sItemProperties, sPrevItemProperties;

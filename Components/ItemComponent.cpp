@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "ItemComponent.h"
+#include "CryNetwork\Rmi.h"
 
 void SItemComponent::Initialize() {
 
@@ -7,6 +8,15 @@ void SItemComponent::Initialize() {
 	Physicalize();
 	CreateItemName();
 	InitializeClass();
+
+	SRmi<RMI_WRAP(&SItemComponent::ClPickUp)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
+	SRmi<RMI_WRAP(&SItemComponent::SvPickUp)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
+
+	//Bind object so that you can DelegateAuthority later
+	if (gEnv->bServer)
+		gEnv->pNetContext->BindObject(GetEntityId(), 0, GetNetSerializeAspectMask(), true);
+	//Binds the entity to network
+	GetEntity()->GetNetEntity()->BindToNetwork();
 
 }
  
@@ -74,14 +84,21 @@ void SItemComponent::CreateItemName() {
 
 }
 
-void SItemComponent::PickUp(IEntity *pNewOwner) {
+bool SItemComponent::ClPickUp(PickUpParams&& p, INetChannel *) {
 
-	if (!pNewOwner)
+	if (!p.pNewOwner)
 		return;
 
-	pOwnerEntity = pNewOwner;
+	//Delegate authority from server to item owner
+	if (gEnv->bServer) {
+		INetChannel *netChannel = gEnv->pGameFramework->GetNetChannel(p.pNewOwner->GetNetEntity()->GetChannelId());
+		gEnv->pNetContext->DelegateAuthority(m_pEntity->GetId(), netChannel);
+	}
+
+	pOwnerEntity = p.pNewOwner;
 	pOwnerEntity->AttachChild(m_pEntity);
 
+	p.pNewOwner->GetId();
 
 	//filter collision
 
@@ -96,6 +113,8 @@ void SItemComponent::PickUp(IEntity *pNewOwner) {
 	constraint.flags |= constraint_inactive;
 	constraint.pBuddy = m_pEntity->GetPhysicalEntity();
 	iOwnerConstraintId = pOwnerEntity->GetPhysicalEntity()->Action(&constraint);
+
+	return true;
 
 }
 

@@ -111,7 +111,6 @@ void CPlayerComponent::HandleInputFlagChange(TInputFlags flags, int activationMo
 bool CPlayerComponent::NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) {
 
 	if (aspect == kInputAspect) {
-
 		ser.BeginGroup("PlayerInput");
 
 		auto inputs = m_inputFlags;
@@ -138,6 +137,7 @@ bool CPlayerComponent::NetSerialize(TSerialize ser, EEntityAspects aspect, uint8
 		ser.EndGroup();
 
 	}
+
 	return true;
 }
 
@@ -146,6 +146,7 @@ void CPlayerComponent::Action_Use(int activationMode) {
 	if (bFreezePlayer)
 		return;
 	if (activationMode == eIS_Pressed) {
+
 		if (pTargetItem)
 			PickUp(pTargetItem);
 
@@ -209,77 +210,84 @@ void CPlayerComponent::Action_LeanRight(int activationMode) {
 	if (bFreezePlayer)
 		return;
 
+	//Checks if player is in third person
+	//If not, it will lean the player
 	if (!bIsTP) {
+		if (activationMode == eIS_Pressed) {
+			//If it is leaned and to the left it will lean back
+			if (bIsLeaned && bIsLeanedLeft) {
 
-		if (bIsLeaned && bIsLeanedLeft) {
+				fLeanDown = 0.5f;
+				fLeanSide = 0.0f;
 
-			fLeanDown = 0.5f;
-			fLeanSide = 0.0f;
-
-			bIsLeanedLeft = false;
-			bIsLeaned = false;
+				bIsLeanedLeft = false;
+				bIsLeaned = false;
+			
+			
+			}
+			//Else if it is none it will lean it to the right
+			else if(!bIsLeanedLeft && bIsLeaned){
 		
-		} else if(!bIsLeanedLeft && bIsLeaned){
+				fLeanDown = 0.4f;
+				fLeanSide = 0.2f;
+
+				bIsLeanedRight = false;
+				bIsLeanedLeft = true;
+				bIsLeaned = true;
 		
-			fLeanDown = 0.4f;
-			fLeanSide = 0.2f;
+			} 
+			//Else it will just lean to the rigth
+			else {
 
-			bIsLeanedRight = false;
-			bIsLeanedLeft = true;
-			bIsLeaned = true;
-		
-		} else {
+				fLeanDown = 0.4f;
+				fLeanSide = 0.2f;
 
-			fLeanDown = 0.4f;
-			fLeanSide = 0.2f;
+				bIsLeanedRight = false;
+				bIsLeanedLeft = true;
+				bIsLeaned = true;
 
-			bIsLeanedRight = false;
-			bIsLeanedLeft = true;
-			bIsLeaned = true;
-
+			}
 		}
-
 	}
-
 }
 
 void CPlayerComponent::Action_LeanLeft(int activationMode) {
 
 	if (bFreezePlayer)
 		return;
-
+	//As in lean right
 	if (!bIsTP) {
+		if (activationMode == eIS_Pressed) {
+			if (bIsLeaned && bIsLeanedRight) {
 
-		if (bIsLeaned && bIsLeanedRight) {
+				fLeanDown = 0.5f;
+				fLeanSide = 0.0f;
 
-			fLeanDown = 0.5f;
-			fLeanSide = 0.0f;
-
-			bIsLeanedRight = false;
-			bIsLeaned = false;
+				bIsLeanedRight = false;
+				bIsLeaned = false;
 		
-		} else if(!bIsLeanedRight && bIsLeaned){
+			} 
+			else if(!bIsLeanedRight && bIsLeaned){
 			
-			fLeanDown = 0.4f;
-			fLeanSide = -0.2f;
+				fLeanDown = 0.4f;
+				fLeanSide = -0.2f;
 		
-			bIsLeanedLeft = false;
-			bIsLeanedRight = true;
-			bIsLeaned = true;
+				bIsLeanedLeft = false;
+				bIsLeanedRight = true;
+				bIsLeaned = true;
 		
-		} else {
+			} 
+			else {
 
-			fLeanDown = 0.4f;
-			fLeanSide = -0.2f;
+				fLeanDown = 0.4f;
+				fLeanSide = -0.2f;
 
-			bIsLeanedLeft = false;
-			bIsLeanedRight = true;
-			bIsLeaned = true;
-
+				bIsLeanedLeft = false;
+				bIsLeanedRight = true;
+				bIsLeaned = true;
+			}
 		}
-
 	}
-
 }
 
 void CPlayerComponent::Action_Attack(int activationMode) {
@@ -333,10 +341,9 @@ void CPlayerComponent::Action_Heal(int activationMode) {
 
 		//fix this!!!
 
-		m_pHealthPackComponent->AddHealth();
 		m_pInventoryComponent->iHealthPackAmount -= 1;
 
-		CryLogAlways("Amoount %i", m_pInventoryComponent->iHealthPackAmount);
+		CryLogAlways("Amount %i", m_pInventoryComponent->iHealthPackAmount);
 
 	} else {
 		CryLogAlways("YOU HAVE NO PACKS!");

@@ -6,9 +6,10 @@
 #include "FlashUI\FlashUI.h"
 
 #include <CryRenderer/IRenderAuxGeom.h>
+#include "CrySchematyc\Env\Elements\EnvComponent.h"
+#include "CryNetwork\Rmi.h"
 #include "ItemComponent.h"
 #include "InventoryComponent.h"
-#include "CryNetwork\Rmi.h"
 
 static void RegisterPlayer(Schematyc::IEnvRegistrar& registrar) {
 	Schematyc::CEnvRegistrationScope scope = registrar.Scope(IEntity::GetEntityScopeGUID());
@@ -27,31 +28,33 @@ void CPlayerComponent::Initialize()
 
 	// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
 	m_pInputComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CInputComponent>();
+	m_pHealthComponent = m_pEntity->GetOrCreateComponentClass<CHealthComponent>();
+	m_pStaminaComponent = m_pEntity->GetOrCreateComponentClass<CStaminaComponent>();
 
-	//Player creation if in editor
-	if (gEnv->IsEditor()) {
+	//Sets health, stamina and such
+	SetPlayerParams();
 
-		m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
-		m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
+	m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
+	m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
 
-		m_pAnimationComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
-		m_pAnimationComponent->SetMannequinAnimationDatabaseFile("Animations/Mannequin/ADB/FirstPerson.adb");
-		m_pAnimationComponent->SetCharacterFile("Objects/Characters/SampleCharacter/thirdperson.cdf");
-		m_pAnimationComponent->SetControllerDefinitionFile("Animations/Mannequin/ADB/FirstPersonControllerDefinition.xml");
-		m_pAnimationComponent->SetDefaultScopeContextName("FirstPersonCharacter");
-		m_pAnimationComponent->SetDefaultFragmentName("Idle");
-		m_pAnimationComponent->SetAnimationDrivenMotion(false);
-		m_pAnimationComponent->LoadFromDisk();
-		m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
-		m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
-		m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
+	m_pAnimationComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
+	m_pAnimationComponent->SetMannequinAnimationDatabaseFile("Animations/Mannequin/ADB/FirstPerson.adb");
+	m_pAnimationComponent->SetCharacterFile("Objects/Characters/SampleCharacter/thirdperson.cdf");
+	m_pAnimationComponent->SetControllerDefinitionFile("Animations/Mannequin/ADB/FirstPersonControllerDefinition.xml");
+	m_pAnimationComponent->SetDefaultScopeContextName("FirstPersonCharacter");
+	m_pAnimationComponent->SetDefaultFragmentName("Idle");
+	m_pAnimationComponent->SetAnimationDrivenMotion(false);
+	m_pAnimationComponent->LoadFromDisk();
+	m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
+	m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
+	m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
 	
-	}
+	//RMI registration
+	SRmi<RMI_WRAP(&CPlayerComponent::SvStamina)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
 
-	if (gEnv->IsEditor()) {
-		Revive();
-		m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
-	}
+	Revive();
+	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
+	bIsInitialized = true;
 }
 
 void CPlayerComponent::LocalPlayerInitialize() {
@@ -98,36 +101,6 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 	{
 		SEntityUpdateContext* pCtx = (SEntityUpdateContext*)event.nParam[0];
 
-		if (!bIsInitialized) {
-			if (!gEnv->IsEditor()) {
-
-				// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
-				m_pInputComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CInputComponent>();
-
-				m_pCharacterController = m_pEntity->GetComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
-				m_pAnimationComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
-
-				if (m_pCharacterController)
-					m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
-
-				if (m_pAnimationComponent) {
-
-					m_pAnimationComponent->LoadFromDisk();
-					m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
-					m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
-					m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
-
-				}
-
-				if (m_pCameraComponent && m_pAnimationComponent && m_pCharacterController) {
-					bIsInitialized = true;
-					Revive();
-					m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
-				}
-
-			}
-		}
-
 		if (gEnv->bServer)
 			UpdateMovementRequest(pCtx->fFrameTime);
 		
@@ -145,6 +118,11 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 
 			Update(pCtx->fFrameTime);
 
+			//Update stamina
+			if (!gEnv->bServer) {
+				m_playerStamina = m_pStaminaComponent->Get();
+				SRmi<RMI_WRAP(&CPlayerComponent::SvStamina)>::InvokeOnServer(this, StaminaParams{ m_playerStamina });
+			}
 		}
 	}
 	break;
@@ -158,6 +136,18 @@ void CPlayerComponent::ReflectType(Schematyc::CTypeDesc<CPlayerComponent>& desc)
 	desc.SetLabel("Player Component");
 	desc.SetDescription("Player component");
 	desc.SetComponentFlags({ IEntityComponent::EFlags::Transform, IEntityComponent::EFlags::Socket, IEntityComponent::EFlags::Attach });
+
+}
+
+void CPlayerComponent::SetPlayerParams() {
+
+	//Stamina values
+	m_pStaminaComponent->SetMax(100.f);
+	m_pStaminaComponent->SetRegenerationRatio(1.1f);
+
+	//Health values
+	m_pHealthComponent->SetMax(100.f);
+	m_pHealthComponent->SetRegenerationRatio(0.02f);
 
 }
 
@@ -279,4 +269,12 @@ void CPlayerComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slotId)
 
 	}
 
+}
+
+bool CPlayerComponent::SvStamina(StaminaParams&& p, INetChannel *) {
+
+	//Server PlayerStamina
+	m_svPlayerStamina = p.playerStamina;
+
+	return true;
 }
