@@ -29,7 +29,6 @@ void CPlayerComponent::Initialize()
 	// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
 	m_pInputComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CInputComponent>();
 	m_pHealthComponent = m_pEntity->GetOrCreateComponentClass<CHealthComponent>();
-	m_pStaminaComponent = m_pEntity->GetOrCreateComponentClass<CStaminaComponent>();
 
 	//Sets health, stamina and such
 	SetPlayerParams();
@@ -48,9 +47,6 @@ void CPlayerComponent::Initialize()
 	m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
 	m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
 	m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
-	
-	//RMI registration
-	SRmi<RMI_WRAP(&CPlayerComponent::SvStamina)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
 
 	Revive();
 	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
@@ -61,8 +57,11 @@ void CPlayerComponent::LocalPlayerInitialize() {
 
 	//Init local player components
 	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
-	InitializeInput();
 	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
+	//Initializes all the different inputs
+	InitializeInput();
+	//Set camera clipping
+	m_pCameraComponent->SetNearPlane(0.1f);
 }
 
 uint64 CPlayerComponent::GetEventMask() const
@@ -117,12 +116,6 @@ void CPlayerComponent::ProcessEvent(SEntityEvent& event)
 				UpdateFPCamera(pCtx->fFrameTime);
 
 			Update(pCtx->fFrameTime);
-
-			//Update stamina
-			if (!gEnv->bServer) {
-				m_playerStamina = m_pStaminaComponent->Get();
-				SRmi<RMI_WRAP(&CPlayerComponent::SvStamina)>::InvokeOnServer(this, StaminaParams{ m_playerStamina });
-			}
 		}
 	}
 	break;
@@ -140,10 +133,6 @@ void CPlayerComponent::ReflectType(Schematyc::CTypeDesc<CPlayerComponent>& desc)
 }
 
 void CPlayerComponent::SetPlayerParams() {
-
-	//Stamina values
-	m_pStaminaComponent->SetMax(100.f);
-	m_pStaminaComponent->SetRegenerationRatio(1.1f);
 
 	//Health values
 	m_pHealthComponent->SetMax(100.f);
@@ -209,11 +198,14 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 	if (!pNewItem)
 		return;
 
+	EntityId playerId = m_pEntity->GetId();
+
 	if (pNewItem->GetItemType() == 5) {
 		if (GetInventory()->iHealthPackAmount < HEALTH_PACK_CAPACITY) {
 
 			if (GetInventory()->AddItem(pNewItem))
-				pNewItem->PickUp(m_pEntity);
+
+				pNewItem->PickUp(playerId);
 
 		} else {
 
@@ -224,7 +216,7 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 
 		if (GetInventory()->AddItemQuickAccess(pNewItem)) {
 
-			pNewItem->PickUp(m_pEntity);
+			pNewItem->PickUp(playerId);
 
 			for (int i = 0; i < WEAPON_CAPACITY; i++) {
 
@@ -239,7 +231,7 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 
 		if (GetInventory()->AddItem(pNewItem)) {
 
-			pNewItem->PickUp(m_pEntity);
+			pNewItem->PickUp(playerId);
 
 		}
 
@@ -269,12 +261,4 @@ void CPlayerComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slotId)
 
 	}
 
-}
-
-bool CPlayerComponent::SvStamina(StaminaParams&& p, INetChannel *) {
-
-	//Server PlayerStamina
-	m_svPlayerStamina = p.playerStamina;
-
-	return true;
 }

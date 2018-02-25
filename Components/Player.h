@@ -14,16 +14,7 @@
 #include <DefaultComponents/Input/InputComponent.h>
 #include "InventoryComponent.h"
 #include "HealthpackComponent.h"
-#include "StaminaComponent.h"
 #include "HealthComponent.h"
-
-struct StaminaParams {
-
-	float playerStamina;
-	void SerializeWith(TSerialize ser){
-		ser.Value("stamina", playerStamina);
-	}
-};
 
 ////////////////////////////////////////////////////////
 // Represents a player participating in gameplay
@@ -135,9 +126,7 @@ public:
 	virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) override;
 	virtual NetworkAspectType GetNetSerializeAspectMask() const { return kInputAspect; }
 	//RMI
-	bool SvStamina(StaminaParams&& p, INetChannel *);
 	//Vars
-	float m_svPlayerStamina;
 	//
 
 protected:
@@ -179,7 +168,6 @@ protected:
 	Cry::DefaultComponents::CInputComponent* m_pInputComponent = nullptr;
 	CInventoryComponent *m_pInventoryComponent = nullptr;
 	CHealthComponent *m_pHealthComponent = nullptr;
-	CStaminaComponent *m_pStaminaComponent = nullptr;
 
 	FragmentID m_idleFragmentId;
 	FragmentID m_walkFragmentId;

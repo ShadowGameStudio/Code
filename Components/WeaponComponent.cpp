@@ -80,6 +80,7 @@ void CWeaponComponent::ReflectType(Schematyc::CTypeDesc<CWeaponComponent>& desc)
 
 //Shoots weapon if it is non-meele
 bool CWeaponComponent::ClShoot(NoParams&& p, INetChannel *) {
+	//Check so that weapon acually isn't meele
 	if (!GetWeaponProperties()->bIsMeele) {
 		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>() ) {
 			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {

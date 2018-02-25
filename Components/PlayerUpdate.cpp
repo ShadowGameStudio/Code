@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "Player.h"
 #include "ItemComponent.h"
-#include "StaminaComponent.h"
 
 #define MOUSE_DELTA_TRESHOLD 0.0001f
 #define PICKUP_RANGE 0.5f
@@ -31,10 +30,8 @@ void CPlayerComponent::UpdateMovementRequest(float frameTime) {
 	if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
 
 		if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
-			if (m_svPlayerStamina > fSprintCostRatio)
-				moveSpeed = sprintSpeed;
-			else
-				moveSpeed = mainSpeed;
+			//Set move speed to sprint speed if shift is pressed	
+			moveSpeed = sprintSpeed;
 		}
 
 		velocity.y += moveSpeed * frameTime;
@@ -48,14 +45,6 @@ void CPlayerComponent::UpdateMovementRequest(float frameTime) {
 			velocity.y = 0.f;
 		}
 	}
-
-	//Removes from sprint value
-	if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
-			m_pStaminaComponent->Remove(fSprintCostRatio);
-	}
-
-	CryLogAlways("CURRENT STAMINA = %F", m_svPlayerStamina);
-
 
 	m_pCharacterController->AddVelocity(GetEntity()->GetWorldRotation() * velocity);
 }
@@ -169,7 +158,6 @@ void CPlayerComponent::UpdateFPCamera(float frameTime) {
 	Matrix34 localTransform = IDENTITY;
 	localTransform.SetRotation33(CCamera::CreateOrientationYPR(ypr));
 
-	//!Fix head cutting!
 	const float viewOffsetForward = 0.2f;
 	const float viewOffsetUp = fLeanDown;
 	const float viewOffsetSide = fLeanSide;
