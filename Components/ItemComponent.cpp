@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "ItemComponent.h"
- 
+#include <CrySchematyc\Env\Elements\EnvComponent.h>
+
  void SItemComponent::Initialize() {
 	 
 	//Load basic item stuff
@@ -8,12 +9,6 @@
 	Physicalize();
 	CreateItemName();
 	InitializeClass();
-	
-	//RMI registration
-	SRmi<RMI_WRAP(&SItemComponent::ClPickUp)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
-	SRmi<RMI_WRAP(&SItemComponent::SvPickUp)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
-
-	m_pEntity->GetNetEntity()->BindToNetwork();
 }
  
  uint64 SItemComponent::GetEventMask() const {
@@ -78,31 +73,6 @@
 	 
 		 
 }
- 
- bool SItemComponent::ClPickUp(PickUpParams && p, INetChannel *) {
-	 
-	 IEntity *pPlayer = gEnv->pEntitySystem->GetEntity(p.playerId);
-
-	 if (!pPlayer)
-		 return false;
-
-	 pOwnerEntity = pPlayer;
-	 pOwnerEntity->AttachChild(m_pEntity);
-
-	 //filter collision	 
-	 pe_action_add_constraint constraint;
-	 constraint.pt[0] = ZERO;
-	 constraint.flags = constraint_ignore_buddy | constraint_inactive;
-	 constraint.pBuddy = pOwnerEntity->GetPhysicalEntity();
-	 iChildConstraintId = m_pEntity->GetPhysicalEntity()->Action(&constraint);
-
-	 //add collision filtering to owner
-	 constraint.flags |= constraint_inactive;
-	 constraint.pBuddy = m_pEntity->GetPhysicalEntity();
-	 iOwnerConstraintId = pOwnerEntity->GetPhysicalEntity()->Action(&constraint);
-	 
-	 return true;
- }
 
  void SItemComponent::Drop() {
 	 

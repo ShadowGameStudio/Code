@@ -291,6 +291,7 @@ void CPlayerComponent::Action_LeanLeft(int activationMode) {
 }
 
 void CPlayerComponent::Action_Attack(int activationMode) {
+			
 	if (SItemComponent *pSelectedItem = m_pInventoryComponent->GetSelectedItem()) {
 		if (CWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CWeaponComponent>()) {
 			//Check if weapon is meele
@@ -314,15 +315,27 @@ void CPlayerComponent::Action_Attack(int activationMode) {
 				//If firemode is automatic
 				if (pSelectedWeapon->GetFiremodeProperties()->bIsAuto) {
 					while (activationMode == eIS_Down) {
-						pSelectedWeapon->SetPlayer(pPlayer);
-						pSelectedWeapon->Shoot();
+						//If weapon has ammo, shoot
+						if (pSelectedWeapon->GetCurrAmmo() >= 1) {
+							pSelectedWeapon->SetPlayer(pPlayer);
+							pSelectedWeapon->Shoot();
+						}
+						//else reload
+						else {
+							pSelectedWeapon->Reload();
+						}
 					}
 				}
 				//If firemode is semi-auto or single, because they do the same thing
 				else if (pSelectedWeapon->GetFiremodeProperties()->bIsSemi || pSelectedWeapon->GetFiremodeProperties()->bIsSingle) {
 					if (activationMode == eIS_Pressed) {
-						pSelectedWeapon->SetPlayer(pPlayer);
-						pSelectedWeapon->Shoot();
+						if (pSelectedWeapon->GetCurrAmmo() >= 1) {
+							pSelectedWeapon->SetPlayer(pPlayer);
+							pSelectedWeapon->Shoot();
+						}
+						else {
+							pSelectedWeapon->Reload();
+						}
 					}
 				}
 				else

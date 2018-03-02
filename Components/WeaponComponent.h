@@ -83,6 +83,7 @@ public:
 	bool GetIsMeele() { return GetWeaponProperties()->bIsMeele; }
 	int GetMaxAmmo() { return GetWeaponProperties()->iMaxAmmo; }
 	int GetClipAmmo() { return GetWeaponProperties()->iClipAmmo; }
+	int GetCurrAmmo() { return iCurrAmmo;  }
 	float GetDamage() { return GetWeaponProperties()->fDamage; }
 
 	//Non-meele weapon specific
@@ -108,6 +109,8 @@ public:
 
 private:
 	bool bIsAttacking = false;
+	int iCurrAmmo;
+
 
 protected:
 	SWeaponProperties sWeaponProperties;

@@ -107,6 +107,9 @@ bool CWeaponComponent::ClShoot(NoParams&& p, INetChannel *) {
 						if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
 							pBullet->SetPlayer(pPlayerShooting);
 
+						//Remove bullet from mag
+						iCurrAmmo -= 1;
+
 					}
 
 				}
@@ -120,7 +123,10 @@ bool CWeaponComponent::ClShoot(NoParams&& p, INetChannel *) {
 
 }
 
-void CWeaponComponent::Reload() {}
+void CWeaponComponent::Reload() {
+
+
+}
 
 void CWeaponComponent::SetPlayer(CPlayerComponent *pPlayer) {
 	pPlayerShooting = pPlayer;
