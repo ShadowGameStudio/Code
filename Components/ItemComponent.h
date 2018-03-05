@@ -34,7 +34,7 @@ public:
 	virtual int GetItemType() { return GetProperties()->itemType; }
 	virtual float GetItemWeight() { return GetProperties()->itemWeight; }
 
-	virtual void PickUp(EntityId id) {}
+	virtual void PickUp(IEntity *pNewOwner);
 	virtual void Drop();
 	virtual bool IsPickable();
 

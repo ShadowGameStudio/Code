@@ -74,6 +74,31 @@
 		 
 }
 
+ void SItemComponent::PickUp(IEntity *pNewOwner) {
+
+	 if (!pNewOwner)
+		 return;
+
+	 pOwnerEntity = pNewOwner;
+	 pOwnerEntity->AttachChild(m_pEntity);
+
+
+	 //filter collision
+
+	 pe_action_add_constraint constraint;
+	 constraint.pt[0] = ZERO;
+	 constraint.flags = constraint_ignore_buddy | constraint_inactive;
+	 constraint.pBuddy = pOwnerEntity->GetPhysicalEntity();
+	 iChildConstraintId = m_pEntity->GetPhysicalEntity()->Action(&constraint);
+
+	 //add collision filtering to owner
+
+	 constraint.flags |= constraint_inactive;
+	 constraint.pBuddy = m_pEntity->GetPhysicalEntity();
+	 iOwnerConstraintId = pOwnerEntity->GetPhysicalEntity()->Action(&constraint);
+
+ }
+
  void SItemComponent::Drop() {
 	 
 	if (!pOwnerEntity)

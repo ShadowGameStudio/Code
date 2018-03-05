@@ -123,11 +123,30 @@ bool CWeaponComponent::ClShoot(NoParams&& p, INetChannel *) {
 
 }
 
+//Reloads the current weapon
 void CWeaponComponent::Reload() {
 
-
+	if (iCurrAmmo == 0) {
+		//Remove the amount of ammo in a full clip from max ammo
+		GetWeaponProperties()->iMaxAmmo -= GetWeaponProperties()->iClipAmmo;
+		//Sets current ammo to the max clip size
+		iCurrAmmo = GetWeaponProperties()->iClipAmmo;
+	}
+	else if (iCurrAmmo >= 1) {
+		//Get the value between max clip ammo and current ammo
+		int iNewAmmo = GetWeaponProperties()->iClipAmmo - iCurrAmmo;
+		//Remove the vaule above from max ammo
+		GetWeaponProperties()->iMaxAmmo -= iNewAmmo;
+		//Sets current ammo to the max clip size
+		iCurrAmmo = GetWeaponProperties()->iClipAmmo;
+	}
+	else if (iCurrAmmo < 0) {
+		//if current ammo is less than zero, set it back to zero
+		iCurrAmmo = 0;
+	}
 }
 
+//Sets the player for ClShoot
 void CWeaponComponent::SetPlayer(CPlayerComponent *pPlayer) {
 	pPlayerShooting = pPlayer;
 }

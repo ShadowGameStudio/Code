@@ -109,7 +109,7 @@ public:
 
 private:
 	bool bIsAttacking = false;
-	int iCurrAmmo;
+	int iCurrAmmo = GetWeaponProperties()->iClipAmmo;
 
 
 protected:

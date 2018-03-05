@@ -193,19 +193,15 @@ void CPlayerComponent::SpawnAtSpawnPoint()
 
 void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 
-	CInventoryComponent InventoryComponent;
-
 	if (!pNewItem)
 		return;
-
-	EntityId playerId = m_pEntity->GetId();
 
 	if (pNewItem->GetItemType() == 5) {
 		if (GetInventory()->iHealthPackAmount < HEALTH_PACK_CAPACITY) {
 
 			if (GetInventory()->AddItem(pNewItem))
 
-				pNewItem->PickUp(playerId);
+				pNewItem->PickUp(m_pEntity);
 
 		} else {
 
@@ -216,7 +212,7 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 
 		if (GetInventory()->AddItemQuickAccess(pNewItem)) {
 
-			pNewItem->PickUp(playerId);
+			pNewItem->PickUp(m_pEntity);
 
 			for (int i = 0; i < WEAPON_CAPACITY; i++) {
 
@@ -231,7 +227,7 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 
 		if (GetInventory()->AddItem(pNewItem)) {
 
-			pNewItem->PickUp(playerId);
+			pNewItem->PickUp(m_pEntity);
 
 		}
 

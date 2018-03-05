@@ -13,9 +13,7 @@ Purpose : Inventory System will allow the player to store items.
 #include "steam\steam_api.h"
 #include "FlashUI\FlashUI.h"
 
-#define INVENTORY_CAPACITY 20
 #define WEAPON_CAPACITY 2
-#define INVENTORY_CAPACITY_KILOS 100
 #define HEALTH_PACK_CAPACITY 5
 
 struct SItemComponent;
@@ -34,47 +32,35 @@ public:
 
 	//Inventory System
 
-	int GetItemSlot(SItemComponent *pNewItem);
-	int GetQuickAccessSlot(SItemComponent *pNewItem);
-	SItemComponent *GetItem(int slot);
-	SItemComponent *GetQuickAccessItem(int slot);
+	int GetWeaponSlot(SItemComponent *pNewWeapon);
 
 	bool AddItem(SItemComponent *pNewItem);
-	bool AddItem(int slot, SItemComponent *pNewItem);
-	bool AddItemQuickAccess(SItemComponent *pNewItem);
-	bool AddItemQuickAccess(int slot, SItemComponent *pNewItem);
 
 	void RemoveItem(SItemComponent *pNewItem);
-	void RemoveItem(int slot);
-	void RemoveItemQuickAccess(SItemComponent *pNewItem);
-	void RemoveItemQuickAccess(int slot);
+	void RemoveWeapon(SItemComponent *pNewItem);
 
-	void AttachToBack(SItemComponent *pItemToAttach, int slotID);
-	void DetachFromBack(int slotID);
+	void AttachToBack(SItemComponent *pWeaponToAttach, int slotId);
+	void DetachFromBack(int slotId);
 	void Attach(SItemComponent *pWeaponToAttach);
 
-	void AttachBackpack(SItemComponent *pItemToAttach, int slotID);
-	void DetachBackpackBack(int slotID);
-	void AttachToHand(SItemComponent *pItemToAttach);
+	void AttachToHand(SItemComponent *pWeaponToAttach);
 	void DetachFromHand();
 
 	void SelectSlot(int slotId);
-	void SetItemSlot(SItemComponent *pItemToMove, int slotId);
-	void SetQuickAccessItemSlot(SItemComponent *pItemToMove, int slotId);
+	void SetItemSlot(SItemComponent *pWeaponToSelect, int slotId);
 
-	SItemComponent *GetSelectedItem() { return pSelectedItem; }
-
-	void Show();
 
 protected:
 
-	void SelectItem(SItemComponent *pItemToSelect);
+	void SelectItem(SItemComponent *pWeaponToSelect);
 	void DeselectItem();
 
 private:
 
-	SItemComponent *pItem[INVENTORY_CAPACITY] = { nullptr };
-	SItemComponent *pQuickAccess[WEAPON_CAPACITY] = { nullptr };
+	float fInventoryCapKilo = 0.f;
+	float fCurrentWeight = 0.f;
+
+	SItemComponent *pWeapon[WEAPON_CAPACITY] = { nullptr };
 
 	//UI Stuff
 
