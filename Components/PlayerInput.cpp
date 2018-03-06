@@ -170,8 +170,10 @@ void CPlayerComponent::Action_DI(int activationMode) {
 	if (bFreezePlayer)
 		return;
 	if (activationMode == eIS_Pressed) {
-			if (SItemComponent *pSelectedItem = GetInventory()->GetSelectedWeapon())
-				pSelectedItem->Drop();
+			//If there is a weapon in the hand, continue
+			if (SItemComponent *pSelectedWeapon = GetInventory()->GetSelectedWeapon())
+				//Drop the weapon
+				pSelectedWeapon->Drop(pSelectedWeapon);
 
 	}
 

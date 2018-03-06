@@ -35,7 +35,7 @@ public:
 	virtual float GetItemWeight() { return GetProperties()->itemWeight; }
 
 	virtual void PickUp(IEntity *pNewOwner);
-	virtual void Drop();
+	virtual void Drop(SItemComponent *pWeaponToDrop);
 	virtual bool IsPickable();
 
 protected:

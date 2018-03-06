@@ -198,8 +198,14 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 		return;
 
 	//Add the item to the inventory
-	if (GetInventory()->AddItem(pNewItem)) 
+	if (GetInventory()->AddItem(pNewItem)) {
+		//Pick the item up
 		pNewItem->PickUp(m_pEntity);
+		//Attach to back if it's a weapon
+		GetInventory()->Attach(pNewItem);
+
+	}
+
 
 }
 

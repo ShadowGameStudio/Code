@@ -26,7 +26,7 @@ uint64 CInventoryComponent::GetEventMask() const {
 void CInventoryComponent::ProcessEvent(SEntityEvent& event) {}
 
 //Returns the slot that the passed in weapon is located in
-int CInventoryComponent::GetWeaponSlot(SItemComponent * pNewWeapon) {
+int CInventoryComponent::GetWeaponSlot(SItemComponent *pNewWeapon) {
 
 	//If is not weapon, return
 	if (!pNewWeapon)
@@ -34,9 +34,8 @@ int CInventoryComponent::GetWeaponSlot(SItemComponent * pNewWeapon) {
 
 	//Check every slot if the weapon is located there
 	for (int i = 0; i < WEAPON_CAPACITY; i++) {
-		if (pWeapon[i] == pNewWeapon) {
+		if (pWeapon[i] == pNewWeapon) 
 			return i;
-		}
 	}
 
 	return -1;
@@ -63,25 +62,25 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 					//If there is no weapon in the slot, continue
 					if (!pWeapon[i]) {
 						//Sets a slot to the weapon
+						pWeapon[i] = pNewItem;
 						args.AddArgument<int>(i);
-
-						//Attaches the weapon to the back
-						pNewItem->GetEntity()->DetachThis();
-						AttachToBack(pNewItem, i);
+						args.AddArgument<string>(pNewItem->GetItemName());
+						args.AddArgument<int>(pNewItem->GetEntityId());
+						args.AddArgument<int>(pNewItem->GetItemType());
+						args.AddArgument<float>(pNewItem->GetItemWeight());
+						//Calls the UI function
+						pUIInventory->CallFunction("AddWeapon", args);
+						return true;
 
 					}
 
 				}
-				args.AddArgument<string>(pNewItem->GetItemName());
-				args.AddArgument<int>(pNewItem->GetEntityId());
-				args.AddArgument<int>(pNewItem->GetItemType());
-				args.AddArgument<float>(pNewItem->GetItemWeight());
-				//Calls the UI function
-				pUIInventory->CallFunction("AddWeapon", args);
 			}
 			//If it is a backpack do this
 			else if(pNewItem->GetItemType() == 3){
 				//TODO: Attach backpack here
+
+				return true;
 			}
 			//If it's not weapon or backpack, just add it normally
 			else {
@@ -91,7 +90,10 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 				args.AddArgument<int>(pNewItem->GetItemType());
 				args.AddArgument<float>(pNewItem->GetItemWeight());
 				pUIInventory->CallFunction("AddItem", args);
+				
+				return true;
 			}
+			
 			return true;
 		}
 		//If there isn't enough carrying weight
@@ -196,14 +198,18 @@ void CInventoryComponent::DetachFromBack(int slotId) {
 //Gets which slot to attach the weapon to
 void CInventoryComponent::Attach(SItemComponent *pWeaponToAttach) {
 
-	//Check every slot if it's the specified weapon
-	for (int i = 0; i < WEAPON_CAPACITY; i++) {
-		//If it is the specified weapon, continue
-		if (pWeapon[i] == pWeaponToAttach) {
-			//Detach the weapon from player
-			pWeaponToAttach->GetEntity()->DetachThis();
-			//Attach it to the back
-			AttachToBack(pWeaponToAttach, i);
+	//If it's a weapon, continue
+	if (pWeaponToAttach->GetItemType() == 2 || 4) {
+		//Check every slot if it's the specified weapon
+		for (int i = 0; i < WEAPON_CAPACITY; i++) {
+			//If it is the specified weapon, continue
+			if (pWeapon[i] == pWeaponToAttach) {
+				//Detach the weapon from player
+				pWeaponToAttach->GetEntity()->DetachThis();
+				//Attach it to the back
+				AttachToBack(pWeaponToAttach, i);
+			}
+
 		}
 
 	}
@@ -271,7 +277,7 @@ void CInventoryComponent::SelectSlot(int slotId) {
 		return;
 
 	//Sets the last selected weapon to the currently selected weapon
-	SItemComponent *pLastSelectedWeapon = pSelectedWeapon;
+	pLastSelectedWeapon = pSelectedWeapon;
 	//Deselect the weapon
 	DeselectWeapon();
 

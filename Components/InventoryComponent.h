@@ -47,6 +47,13 @@ public:
 	void DetachFromHand();
 
 	void SelectSlot(int slotId);
+	void RemoveWeapon(int slotId) { 
+		//Empty the slot
+		pWeapon[slotId] = nullptr;
+		//Set selected weapon to null
+		pSelectedWeapon = nullptr;
+		pLastSelectedWeapon = nullptr;
+	}
 	SItemComponent *GetSelectedWeapon() { return pSelectedWeapon; }
 
 	void Show();
@@ -75,6 +82,7 @@ private:
 	//Item selection
 
 	SItemComponent *pSelectedWeapon = nullptr;
+	SItemComponent *pLastSelectedWeapon = nullptr;
 
 public:
 

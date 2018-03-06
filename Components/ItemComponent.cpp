@@ -99,16 +99,24 @@
 
  }
 
- void SItemComponent::Drop() {
+ void SItemComponent::Drop(SItemComponent *pWeaponToDrop) {
 	 
 	if (!pOwnerEntity)
 		return;
+	
+	//If it owner entity has PlayerComponent, continue
+	if (CPlayerComponent *pOwnerPlayer = pOwnerEntity->GetComponent<CPlayerComponent>()) {
+		//Detach the weapon from players hand
+		pOwnerPlayer->GetInventory()->DetachFromHand();
+
+		//Get the weapon slot
+		int iWeaponSlot = pOwnerPlayer->GetInventory()->GetWeaponSlot(pWeaponToDrop);
+		//Erase the weapon from the index
+		pOwnerPlayer->GetInventory()->RemoveWeapon(iWeaponSlot);
+	}
+	
 	 
-	CPlayerComponent * pOwnerPlayer = pOwnerEntity->GetComponent<CPlayerComponent>();
-	 
-	pOwnerPlayer->GetInventory()->DetachFromHand();
-	 
-		 	//Stop ignoring owner collision
+	//Stop ignoring owner collision
 	pe_action_update_constraint constraintUpdate;
 	constraintUpdate.bRemove = 1;
 	constraintUpdate.idConstraint = iChildConstraintId;
@@ -118,7 +126,7 @@
 	pOwnerEntity->GetPhysicalEntity()->Action(&constraintUpdate);
 	 
 	pe_action_impulse impulse;
-	impulse.impulse = pOwnerEntity->GetForwardDir() * 1000.f;
+	impulse.impulse = pOwnerEntity->GetForwardDir();
 	 
 	m_pEntity->GetPhysicalEntity()->Action(&impulse);
 	 
