@@ -193,45 +193,14 @@ void CPlayerComponent::SpawnAtSpawnPoint()
 
 void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 
+	//If it isn't the correct item, return
 	if (!pNewItem)
 		return;
 
-	if (pNewItem->GetItemType() == 5) {
-		if (GetInventory()->iHealthPackAmount < HEALTH_PACK_CAPACITY) {
+	//Add the item to the inventory
+	if (GetInventory()->AddItem(pNewItem)) 
+		pNewItem->PickUp(m_pEntity);
 
-			if (GetInventory()->AddItem(pNewItem))
-
-				pNewItem->PickUp(m_pEntity);
-
-		} else {
-
-			CryLogAlways("You're full!");
-
-		}
-	} else if (pNewItem->GetItemType() == 2 || 4) {
-
-		if (GetInventory()->AddItemQuickAccess(pNewItem)) {
-
-			pNewItem->PickUp(m_pEntity);
-
-			for (int i = 0; i < WEAPON_CAPACITY; i++) {
-
-				pNewItem->GetEntity()->DetachThis();
-				AttachToBack(pNewItem, i);
-
-			}
-
-		}
-	}
-	else {
-
-		if (GetInventory()->AddItem(pNewItem)) {
-
-			pNewItem->PickUp(m_pEntity);
-
-		}
-
-	}
 }
 
 void CPlayerComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slotId) {

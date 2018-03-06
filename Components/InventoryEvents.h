@@ -11,9 +11,6 @@ public:
 		string eventName = event.sDisplayName;
 
 		if (eventName == "") {
-
-
-
 		}
 
 	}

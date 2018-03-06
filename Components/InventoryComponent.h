@@ -47,17 +47,18 @@ public:
 	void DetachFromHand();
 
 	void SelectSlot(int slotId);
-	void SetItemSlot(SItemComponent *pWeaponToSelect, int slotId);
+	SItemComponent *GetSelectedWeapon() { return pSelectedWeapon; }
 
+	void Show();
 
 protected:
 
-	void SelectItem(SItemComponent *pWeaponToSelect);
-	void DeselectItem();
+	void SelectWeapon(SItemComponent *pWeaponToSelect);
+	void DeselectWeapon();
 
 private:
 
-	float fInventoryCapKilo = 0.f;
+	float fInventoryCapKilo = 100.f;
 	float fCurrentWeight = 0.f;
 
 	SItemComponent *pWeapon[WEAPON_CAPACITY] = { nullptr };
@@ -73,7 +74,7 @@ private:
 
 	//Item selection
 
-	SItemComponent *pSelectedItem = nullptr;
+	SItemComponent *pSelectedWeapon = nullptr;
 
 public:
 

@@ -72,9 +72,13 @@ public:
 				//Gets the player, the players inventory, the weapon he's holding and the damage the weapon does
 				//After that it damages the shot player
 				if (pColliderEntity && pColliderEntity !=m_pEntity && pColliderEntity) {
+
 					if (CHealthComponent *pVictimHealth = pColliderEntity->GetComponent<CHealthComponent>()) {
+
 						if (pVictimHealth->IsAlive()) {
-							if (SItemComponent *pShootingWeapon = pPlayerShooting->GetInventory()->GetSelectedItem()) {
+
+							if (SItemComponent *pShootingWeapon = pPlayerShooting->GetInventory()->GetSelectedWeapon()) {
+
 								if (CWeaponComponent *pWeapon = pShootingWeapon->GetEntity()->GetComponent<CWeaponComponent>()) {
 									//The actual damage
 									pVictimHealth->Add((-pWeapon->GetDamage()));

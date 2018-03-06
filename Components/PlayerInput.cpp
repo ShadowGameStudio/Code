@@ -170,7 +170,7 @@ void CPlayerComponent::Action_DI(int activationMode) {
 	if (bFreezePlayer)
 		return;
 	if (activationMode == eIS_Pressed) {
-			if (SItemComponent *pSelectedItem = GetInventory()->GetSelectedItem())
+			if (SItemComponent *pSelectedItem = GetInventory()->GetSelectedWeapon())
 				pSelectedItem->Drop();
 
 	}
@@ -292,7 +292,7 @@ void CPlayerComponent::Action_LeanLeft(int activationMode) {
 
 void CPlayerComponent::Action_Attack(int activationMode) {
 			
-	if (SItemComponent *pSelectedItem = m_pInventoryComponent->GetSelectedItem()) {
+	if (SItemComponent *pSelectedItem = m_pInventoryComponent->GetSelectedWeapon()) {
 		if (CWeaponComponent *pSelectedWeapon = pSelectedItem->GetEntity()->GetComponent<CWeaponComponent>()) {
 			//Check if weapon is meele
 			if (pSelectedWeapon->GetIsMeele()) {
