@@ -56,21 +56,9 @@ void CLootSpawnerComponent::SpawnItem() {
 
 	if (!bIsSpawned) {
 
-		int *pLootAmount = nullptr;
-
-		//Checks what loot rarity it is
-		if (GetProperties()->iLootRarity == 1)
-			pLootAmount = &sCommonClassAmount;
-		else if (GetProperties()->iLootRarity == 2)
-			pLootAmount = &sUncommonClassAmount;
-		else if (GetProperties()->iLootRarity == 3)
-			pLootAmount = &sRareClassAmount;
-		else if (GetProperties()->iLootRarity == 4)
-			pLootAmount = &sRarerClassAmount;
-		else if (GetProperties()->iLootRarity == 5)
-			pLootAmount = &sURareClassAmount;
-
-		string sClass = GetRandomClass(pLootAmount);
+		//Gets the rarity and select a class
+		//Sets sClass to a random value
+		GetRandomRarity(GetProperties()->iLootLevel);
 
 		//Setup spawn params
 		SEntitySpawnParams spawnParams;
@@ -88,7 +76,8 @@ void CLootSpawnerComponent::SpawnItem() {
 	}
 }
 
-string CLootSpawnerComponent::GetRandomClass(int *classAmount) {
+//Gets a random item class based on item level
+void CLootSpawnerComponent::GetRandomClass(int *classAmount, int *rarityType) {
 	
 	int *pClassAmount = classAmount;
 
@@ -97,16 +86,76 @@ string CLootSpawnerComponent::GetRandomClass(int *classAmount) {
 	int iRandIndex = rand() % *pClassAmount;
 
 	//Gets the class and returns the class string
-	if (GetProperties()->iLootRarity == 1)
-		return sCommonClasses[iRandIndex];
-	else if (GetProperties()->iLootRarity == 2)
-		return sUncommonClasses[iRandIndex];
-	else if (GetProperties()->iLootRarity == 3)
-		return sRareClasses[iRandIndex];
-	else if (GetProperties()->iLootRarity == 4)
-		return sRarerClasses[iRandIndex];
-	else if (GetProperties()->iLootRarity == 5)
-		return sURareClasses[iRandIndex];
+	if (*rarityType == 1)
+		sClass = sCommonClasses[iRandIndex];
+	else if (*rarityType == 2)
+		sClass = sUncommonClasses[iRandIndex];
+	else if (*rarityType == 3)
+		sClass = sRareClasses[iRandIndex];
+	else if (*rarityType == 4)
+		sClass = sRarerClasses[iRandIndex];
+	else if (*rarityType == 5)
+		sClass = sURareClasses[iRandIndex];
 	else
-		return string();
+		return;
+}
+
+//Gets the RandomRarity based on item level
+void CLootSpawnerComponent::GetRandomRarity(int itemLevel) {
+
+	int *iRarityType = nullptr;
+
+	//If the item level is less than three, continue
+	if (itemLevel < 3) {
+
+		//Get random number that will be used below
+		srand((unsigned int)time(NULL));
+		int iRandRarity = rand() % 2;
+
+		//If the item level is equal to one, continue
+		if (itemLevel == 1) {
+			//If the random number generated is equal to zero, continue
+			if (iRandRarity == 0) {
+				//Set the loot class amount to a certain number
+				pLootClassAmount = &sCommonClassAmount;
+				//Set the rarity type to one
+				*iRarityType = 1;
+			}
+			else if (iRandRarity == 1) {
+				pLootClassAmount = &sUncommonClassAmount;
+				*iRarityType = 2;
+			}
+		}
+		//Else if the item level is equal to two, contiune
+		else if (itemLevel == 2) {
+			if (iRandRarity == 0) {
+				pLootClassAmount = &sRareClassAmount;
+				*iRarityType = 3;
+			}
+			else if (iRandRarity == 1){
+				pLootClassAmount = &sRarerClassAmount;
+				*iRarityType = 4;
+			}
+		}
+		//Else if the item level is zero, continue
+		else if (itemLevel == 0) {
+			//Set all level less items to common
+			pLootClassAmount = &sCommonClassAmount;
+			*iRarityType = 1;
+		}
+
+	}
+	//Else if item level is three, continue
+	else if (itemLevel == 3) {
+		pLootClassAmount = &sURareClassAmount;
+		*iRarityType = 5;
+	}
+	//If it's none of these, return
+	else {
+		return;
+	}
+
+	//Get the random class from
+	GetRandomClass(pLootClassAmount, iRarityType);
+
 }

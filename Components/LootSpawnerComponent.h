@@ -17,14 +17,15 @@ class CLootSpawnerComponent : public IEntityComponent {
 		inline bool operator==(const SLootSpawnerProperties& rhs) const { return 0 == memcmp(this, &rhs, sizeof(rhs)); }
 		inline bool operator!=(const SLootSpawnerProperties& rhs) const { return 0 != memcmp(this, &rhs, sizeof(rhs)); }
 
-		int iLootRarity;
+		//If zero it doesn't have any and counts as common loot?
+		int iLootLevel;
 
 		static void ReflectType(Schematyc::CTypeDesc<SLootSpawnerProperties>& desc) {
 
 			desc.SetGUID("{BB7C97D9-51FF-4457-966E-BECA3C702C49}"_cry_guid);
 			desc.SetLabel("Loot Spawner Properties");
 			desc.SetDescription("Sets the different properties for the loot, such as what loot rarity to spawn");
-			desc.AddMember(&SLootSpawnerProperties::iLootRarity, 'ilry', "LootRarity", "Loot Rarity", "Sets the loot rarity(1 lowest, 5 highest)", 0);
+			desc.AddMember(&SLootSpawnerProperties::iLootLevel, 'ilry', "LootLevel", "Loot Level", "Sets the loot level(1 lowest, 3 highest)", 0);
 
 		}
 
@@ -49,13 +50,19 @@ public:
 
 	SLootSpawnerProperties *GetProperties() { return &sLootSpawnerProperties; }
 	void SpawnItem();
-	string GetRandomClass(int* classAmount);
+	void GetRandomClass(int *classAmount, int *rarityType);
+	void GetRandomRarity(int itemLevel);
 
 	int sCommonClassAmount = sCommonClasses.size();
 	int sUncommonClassAmount = sUncommonClasses.size();
 	int sRareClassAmount = sRareClasses.size();
 	int sRarerClassAmount = sRarerClasses.size();
 	int sURareClassAmount = sURareClasses.size();
+
+	//Int that will be used to pass the amount of classes in the specified vector 
+	int *pLootClassAmount = nullptr;
+	string sClass = "";
+
 	bool bIsSpawned = false;
 
 protected:
