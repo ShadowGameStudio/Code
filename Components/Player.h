@@ -129,6 +129,8 @@ public:
 	//Vars
 	//
 
+	bool bPlayerIsWearingGasmask = false;
+
 protected:
 	void UpdateMovementRequest(float frameTime);
 	void UpdateLookDirectionRequest(float frameTime);

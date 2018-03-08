@@ -15,6 +15,7 @@ Purpose : Inventory System will allow the player to store items.
 
 #define WEAPON_CAPACITY 2
 #define HEALTH_PACK_CAPACITY 5
+#define GASMASK_CAPACITY 1
 
 struct SItemComponent;
 struct IUIElement;
@@ -55,6 +56,7 @@ public:
 		pLastSelectedWeapon = nullptr;
 	}
 	SItemComponent *GetSelectedWeapon() { return pSelectedWeapon; }
+	SItemComponent *GetGasmask() { return pCurrentGasmask; }
 
 	void Show();
 
@@ -69,6 +71,7 @@ private:
 	float fCurrentWeight = 0.f;
 
 	SItemComponent *pWeapon[WEAPON_CAPACITY] = { nullptr };
+	SItemComponent *pGasmask[GASMASK_CAPACITY] = { nullptr };
 
 	//UI Stuff
 
@@ -81,6 +84,7 @@ private:
 
 	//Item selection
 
+	SItemComponent *pCurrentGasmask = nullptr;
 	SItemComponent *pSelectedWeapon = nullptr;
 	SItemComponent *pLastSelectedWeapon = nullptr;
 

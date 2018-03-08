@@ -70,6 +70,9 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 						args.AddArgument<float>(pNewItem->GetItemWeight());
 						//Calls the UI function
 						pUIInventory->CallFunction("AddWeapon", args);
+						//Sets the current gasmask
+						pCurrentGasmask = pNewItem;
+
 						return true;
 
 					}
@@ -82,8 +85,28 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 
 				return true;
 			}
-			//If it's not weapon or backpack, just add it normally
+			else if (pNewItem->GetItemType() == 6) {
+
+				SUIArguments args;
+				for (int i = 0; i < GASMASK_CAPACITY; i++) {
+					if (!pGasmask[i]) {
+						//Adds all the arguments for flash
+						//Sets a slot to the gasmask
+						pGasmask[i] = pNewItem;
+						args.AddArgument<string>(pNewItem->GetItemName());
+						args.AddArgument<int>(pNewItem->GetEntityId());
+						args.AddArgument<int>(pNewItem->GetItemType());
+						args.AddArgument<float>(pNewItem->GetItemWeight());
+						//Calls the UI function
+						pUIInventory->CallFunction("AddGasmask", args);
+						return true;
+					}
+
+				}
+			}
+			//If it's not weapon, gasmask or backpack, just add it normally
 			else {
+				//Adds all of the arguments for flash
 				SUIArguments args;
 				args.AddArgument<string>(pNewItem->GetItemName());
 				args.AddArgument<int>(pNewItem->GetEntityId());
