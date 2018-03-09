@@ -103,7 +103,7 @@ void CLootSpawnerComponent::GetRandomClass(int *classAmount, int *rarityType) {
 //Gets the RandomRarity based on item level
 void CLootSpawnerComponent::GetRandomRarity(int itemLevel) {
 
-	int *iRarityType = nullptr;
+	int iRarityType;
 
 	//If the item level is less than three, continue
 	if (itemLevel < 3) {
@@ -119,43 +119,45 @@ void CLootSpawnerComponent::GetRandomRarity(int itemLevel) {
 				//Set the loot class amount to a certain number
 				pLootClassAmount = &sCommonClassAmount;
 				//Set the rarity type to one
-				*iRarityType = 1;
+				iRarityType = 1;
 			}
 			else if (iRandRarity == 1) {
 				pLootClassAmount = &sUncommonClassAmount;
-				*iRarityType = 2;
+				iRarityType = 2;
 			}
 		}
 		//Else if the item level is equal to two, contiune
 		else if (itemLevel == 2) {
 			if (iRandRarity == 0) {
 				pLootClassAmount = &sRareClassAmount;
-				*iRarityType = 3;
+				iRarityType = 3;
 			}
 			else if (iRandRarity == 1){
 				pLootClassAmount = &sRarerClassAmount;
-				*iRarityType = 4;
+				iRarityType = 4;
 			}
 		}
 		//Else if the item level is zero, continue
 		else if (itemLevel == 0) {
 			//Set all level less items to common
 			pLootClassAmount = &sCommonClassAmount;
-			*iRarityType = 1;
+			iRarityType = 5;
 		}
 
 	}
 	//Else if item level is three, continue
 	else if (itemLevel == 3) {
 		pLootClassAmount = &sURareClassAmount;
-		*iRarityType = 5;
+		iRarityType = 5;
 	}
 	//If it's none of these, return
 	else {
 		return;
 	}
+	//Int made for passing on
+	int *pRarityType = &iRarityType;
 
 	//Get the random class from
-	GetRandomClass(pLootClassAmount, iRarityType);
+	GetRandomClass(pLootClassAmount, pRarityType);
 
 }

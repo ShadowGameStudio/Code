@@ -79,8 +79,12 @@ void CGamePlugin::OnSystemEvent(ESystemEvent event, UINT_PTR wparam, UINT_PTR lp
 bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 {
 	// Connection received from a client, create a player entity and component
+	IEntityClass *pPlayerClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("schematyc::players::player_main");
 	SEntitySpawnParams spawnParams;
-	spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+	if (!gEnv->IsEditor())
+		spawnParams.pClass = pPlayerClass;
+	else
+		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
 	string sName = string().Format("Player%" PRISIZE_T, m_players.size());
 	spawnParams.sName = "Player";
 	spawnParams.nFlags |= ENTITY_FLAG_NEVER_NETWORK_STATIC;
@@ -95,8 +99,8 @@ bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 	// Spawn the player entity
 	if (IEntity* pPlayerEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams))
 	{
-		
-		pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
+		if(gEnv->IsEditor())
+			pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
 
 		// Set the local player entity channel id, and bind it to the network so that it can support Multiplayer contexts
 		pPlayerEntity->GetNetEntity()->SetChannelId(channelId);

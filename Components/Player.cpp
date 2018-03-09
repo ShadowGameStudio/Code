@@ -33,22 +33,37 @@ void CPlayerComponent::Initialize()
 	//Sets health, stamina and such
 	SetPlayerParams();
 
-	m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
-	m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
+	if (gEnv->IsEditor()) {
+		m_pCharacterController = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
+		m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
 
-	m_pAnimationComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
-	m_pAnimationComponent->SetMannequinAnimationDatabaseFile("Animations/Mannequin/ADB/FirstPerson.adb");
-	m_pAnimationComponent->SetCharacterFile("Objects/Characters/SampleCharacter/thirdperson.cdf");
-	m_pAnimationComponent->SetControllerDefinitionFile("Animations/Mannequin/ADB/FirstPersonControllerDefinition.xml");
-	m_pAnimationComponent->SetDefaultScopeContextName("FirstPersonCharacter");
-	m_pAnimationComponent->SetDefaultFragmentName("Idle");
-	m_pAnimationComponent->SetAnimationDrivenMotion(false);
-	m_pAnimationComponent->LoadFromDisk();
-	m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
-	m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
-	m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
+		m_pAnimationComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
+		m_pAnimationComponent->SetMannequinAnimationDatabaseFile("Animations/Mannequin/ADB/FirstPerson.adb");
+		m_pAnimationComponent->SetCharacterFile("Objects/Characters/SampleCharacter/thirdperson.cdf");
+		m_pAnimationComponent->SetControllerDefinitionFile("Animations/Mannequin/ADB/FirstPersonControllerDefinition.xml");
+		m_pAnimationComponent->SetDefaultScopeContextName("FirstPersonCharacter");
+		m_pAnimationComponent->SetDefaultFragmentName("Idle");
+		m_pAnimationComponent->SetAnimationDrivenMotion(false);
+		m_pAnimationComponent->LoadFromDisk();
+		m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
+		m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
+		m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
 
-	Revive();
+		Revive();
+	}
+	else {
+		m_pCharacterController = m_pEntity->GetComponent<Cry::DefaultComponents::CCharacterControllerComponent>();
+		m_pCharacterController->SetTransformMatrix(Matrix34::Create(Vec3(1.f), IDENTITY, Vec3(0, 0, 1.f)));
+
+		m_pAnimationComponent = m_pEntity->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>();
+		m_pAnimationComponent->LoadFromDisk();
+		m_idleFragmentId = m_pAnimationComponent->GetFragmentId("Idle");
+		m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
+		m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
+
+		Revive();
+	}
+
 	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
 	bIsInitialized = true;
 }

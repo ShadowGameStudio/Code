@@ -130,6 +130,7 @@ public:
 	//
 
 	bool bPlayerIsWearingGasmask = false;
+	bool bCanTakeInfectedDamage = true;
 
 protected:
 	void UpdateMovementRequest(float frameTime);
