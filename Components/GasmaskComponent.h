@@ -42,6 +42,6 @@ public:
 
 protected:
 
-	SGasmaskProperties &sGasmaskProperties;
+	SGasmaskProperties sGasmaskProperties;
 
 };

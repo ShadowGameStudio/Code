@@ -31,7 +31,7 @@ public:
 	virtual void CreateItemName();
 	virtual string GetItemName() { return GetProperties()->sItemName;  }
 
-	virtual int GetItemType() { return GetProperties()->itemType; }
+	virtual EItemType GetItemType() { return GetProperties()->eItemType; }
 	virtual float GetItemWeight() { return GetProperties()->itemWeight; }
 
 	virtual void PickUp(IEntity *pNewOwner);

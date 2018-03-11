@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectTypeGuids>{E7562513-36BA-4D11-A927-975E5375ED10};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>26650445-342c-426e-9429-b0f0ab378f73</ProjectGuid>
+    <ProjectGuid>520a920a-3203-4053-8830-e8e52269792b</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>CryEngine.Projects.steam</RootNamespace>
@@ -14,14 +14,14 @@
     <FileAlignment>512</FileAlignment>
     <UseMSBuildEngine>false</UseMSBuildEngine>
     <CryEngineLauncherPath>C:\Program Files (x86)\Crytek\CRYENGINE Launcher\Crytek\CRYENGINE_5.4\bin\win_x64\GameLauncher.exe</CryEngineLauncherPath>
-    <CryEngineProjectPath>C:\Users\xXRag\Desktop\New folder (2)\Game.cryproject</CryEngineProjectPath>
+    <CryEngineProjectPath>J:\BR\Game.cryproject</CryEngineProjectPath>
     <CryEngineCommandArguments></CryEngineCommandArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>C:\Users\xXRag\Desktop\New folder (2)\bin</OutputPath>
+    <OutputPath>J:\BR\bin</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -29,7 +29,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>C:\Users\xXRag\Desktop\New folder (2)\bin</OutputPath>
+    <OutputPath>J:\BR\bin</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

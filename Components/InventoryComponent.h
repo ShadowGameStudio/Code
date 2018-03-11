@@ -45,6 +45,7 @@ public:
 	void Attach(SItemComponent *pWeaponToAttach);
 
 	void AttachToHand(SItemComponent *pWeaponToAttach);
+	void AttachToFace(SItemComponent *pItemToAttach);
 	void DetachFromHand();
 
 	void SelectSlot(int slotId);

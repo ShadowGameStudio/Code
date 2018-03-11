@@ -3,6 +3,7 @@
 #include "InventoryComponent.h"
 #include <FlashUI\FlashUI.h>
 #include "InventoryEvents.h"
+#include "ItemProperties.h"
 
 void CInventoryComponent::Initialize() {
 
@@ -70,9 +71,6 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 						args.AddArgument<float>(pNewItem->GetItemWeight());
 						//Calls the UI function
 						pUIInventory->CallFunction("AddWeapon", args);
-						//Sets the current gasmask
-						pCurrentGasmask = pNewItem;
-
 						return true;
 
 					}
@@ -99,6 +97,8 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 						args.AddArgument<float>(pNewItem->GetItemWeight());
 						//Calls the UI function
 						pUIInventory->CallFunction("AddGasmask", args);
+						//Sets the current gasmask
+						pCurrentGasmask = pNewItem;
 						return true;
 					}
 
@@ -219,22 +219,41 @@ void CInventoryComponent::DetachFromBack(int slotId) {
 }
 
 //Gets which slot to attach the weapon to
-void CInventoryComponent::Attach(SItemComponent *pWeaponToAttach) {
+void CInventoryComponent::Attach(SItemComponent *pItemToAttach) {
 
 	//If it's a weapon, continue
-	if (pWeaponToAttach->GetItemType() == 2 || 4) {
+	if (pItemToAttach->GetItemType() == EItemType::Weapon || EItemType::MeeleWeapon) {
 		//Check every slot if it's the specified weapon
 		for (int i = 0; i < WEAPON_CAPACITY; i++) {
 			//If it is the specified weapon, continue
-			if (pWeapon[i] == pWeaponToAttach) {
+			if (pWeapon[i] == pItemToAttach) {
 				//Detach the weapon from player
-				pWeaponToAttach->GetEntity()->DetachThis();
+				pItemToAttach->GetEntity()->DetachThis();
 				//Attach it to the back
-				AttachToBack(pWeaponToAttach, i);
+				AttachToBack(pItemToAttach, i);
 			}
 
 		}
 
+	}
+	//If it's a gasmask, continue
+	else if (pItemToAttach->GetItemType() == EItemType::Gasmask) {
+		//Check every slot for the specified gasmask
+		for (int i = 0; i < GASMASK_CAPACITY; i++) {
+			//If it's the specified gasmask, continue
+			if (pGasmask[i] == pItemToAttach) {
+				//Detach the gasmask from the player
+				pItemToAttach->GetEntity()->DetachThis();
+				//Attach it to the face
+				AttachToFace(pItemToAttach);
+			}
+
+		}
+
+	}
+	//If it's none of the above, continue
+	else {
+		return;
 	}
 
 }
@@ -264,6 +283,47 @@ void CInventoryComponent::AttachToHand(SItemComponent *pWeaponToAttach) {
 			if (IAttachment *pAttachment = pAttMan->GetInterfaceByName(sAttName)) {
 				//Attach the weapon
 				pAttachment->AddBinding(pAttachmentWeapon);
+			}
+		}
+	}
+
+}
+
+//Attach a mask to the face
+void CInventoryComponent::AttachToFace(SItemComponent *pItemToAttach) {
+
+	if (!pItemToAttach)
+		return;
+
+	//Get the players PlayerComponent
+	CPlayerComponent *pPlayer = m_pEntity->GetComponent<CPlayerComponent>();
+	//Create attachment entity for the mask
+	CEntityAttachment *pAttachmentItem = new CEntityAttachment();
+	//Assigns the item to the attachment
+	pAttachmentItem->SetEntityId(pItemToAttach->GetEntityId());
+
+	//If it can get the players character, continue
+	if (ICharacterInstance *pCharacter = pPlayer->GetAnimations()->GetCharacter()) {
+		//If it can get the characters attachments, continue
+		if (IAttachmentManager *pAttMan = pCharacter->GetIAttachmentManager()) {
+		
+			//The attachment string
+			string sAttName = "mask";
+			//If it can get the attachment
+			if (IAttachment *pAttachment = pAttMan->GetInterfaceByName(sAttName)) {
+				//Attach the item
+				pAttachment->AddBinding(pAttachmentItem);
+				//If it can get the items gasmask component, continue
+				if (CGasmaskComponent *pGasmask = pItemToAttach->GetEntity()->GetComponent<CGasmaskComponent>()) {
+					//Sets that the player is wearing a gasmask
+					pPlayer->bPlayerIsWearingGasmask = true;
+				}
+				//It it can't, continue
+				else {
+					//Sets that the player isn't wearing any gasmask
+					pPlayer->bPlayerIsWearingGasmask = false;
+				}
+
 			}
 		}
 	}

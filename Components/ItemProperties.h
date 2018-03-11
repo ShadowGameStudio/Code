@@ -5,6 +5,14 @@
 #include <CrySchematyc\ResourceTypes.h>
 #include <CrySchematyc\Reflection\TypeDesc.h>
 
+#include <CrySchematyc/MathTypes.h>
+#include <CrySchematyc/IObject.h>
+#include <CrySchematyc/Utils/SharedString.h>
+#include <CrySchematyc/Env/IEnvRegistrar.h>
+
+#include <CryGame/IGameFramework.h>
+#include <IActionMapManager.h>
+
 enum ItemGeometrySlot {
 	GEOMETRY_SLOT = 0
 };
@@ -49,6 +57,35 @@ static void ReflectType(Schematyc::CTypeDesc<SPhysicsProperties>& desc) {
 	desc.AddMember(&SPhysicsProperties::fMass, 'fmas', "Mass", "Mass", "Mass of the item", 0.f);
 }
 
+enum EItemType {
+
+	Normal,
+	WeaponEquipment,
+	Weapon,
+	Backpack,
+	MeeleWeapon,
+	Healthpack,
+	Gasmask
+
+};
+
+static void ReflectType(Schematyc::CTypeDesc<EItemType>& desc) {
+
+	desc.SetGUID("{18935D73-EBBE-4E5C-9D24-239B6D0071A2}"_cry_guid);
+	desc.SetLabel("Item type");
+	desc.SetDescription("Sets the items type");
+	desc.SetFlags(Schematyc::ETypeFlags::Switchable);
+	desc.SetDefaultValue(EItemType::Normal);
+	desc.AddConstant(EItemType::Normal, "Normal", "Normal");
+	desc.AddConstant(EItemType::WeaponEquipment, "WeaponEquipment", "Weapon Equipment");
+	desc.AddConstant(EItemType::Weapon, "Weapon", "Weapon");
+	desc.AddConstant(EItemType::Backpack, "Backpack", "Backpack");
+	desc.AddConstant(EItemType::MeeleWeapon, "MeeleWeapon", "Meele Weapon");
+	desc.AddConstant(EItemType::Healthpack, "Healthpack", "Healthpack");
+	desc.AddConstant(EItemType::Gasmask, "Gasmask", "Gasmask");
+
+}
+
 //Main Prop. Structure
 struct SItemProperties {
 
@@ -57,10 +94,10 @@ struct SItemProperties {
 
 	SRenderProperties sRenderProperties, sPrevRenderProperties;
 	SPhysicsProperties sPhysicsProperties;
+	EItemType eItemType;
 	//Item specific
-	
-	int itemType;
-	int itemRarity;
+
+	int itemLevel;
 	float itemWeight;
 
 	//Non-editor
@@ -74,8 +111,8 @@ static void ReflectType(Schematyc::CTypeDesc<SItemProperties>& desc) {
 	desc.SetDescription("Item  Properties");
 	desc.AddMember(&SItemProperties::sRenderProperties, 'renp', "RenderProperties", "Render Properties", "All the render settings for current item", SRenderProperties());
 	desc.AddMember(&SItemProperties::sPhysicsProperties, 'phyp', "PhysicsProperties", "Physics Properties", "All the physics settings for current item", SPhysicsProperties());
+	desc.AddMember(&SItemProperties::eItemType, 'eit', "ItemType", "Item Type", "Sets the items type", EItemType());
 	desc.AddMember(&SItemProperties::itemWeight, 'iw', "ItemWeight", "Item Weight", "Sets the item weight in kilos", 0.f);
-	desc.AddMember(&SItemProperties::itemType, 'it', "ItemType", "Item Type", "Sets the item type", 0);
-	desc.AddMember(&SItemProperties::itemRarity, 'ir', "ItemRarity", "Item Rarity", "Sets the item rarity", 0);
+	desc.AddMember(&SItemProperties::itemLevel, 'ir', "ItemRarity", "Item Rarity", "Sets the item rarity", 0);
 
 }
