@@ -30,6 +30,7 @@ void CAIControllerComponent::ReflectType(Schematyc::CTypeDesc<CAIControllerCompo
 
 }
 
+//Adds some sort of velocity
 void CAIControllerComponent::AddVelocity(const Vec3 velocity) {
 
 	//If it can get the AIs physical entity, continue
@@ -46,6 +47,13 @@ void CAIControllerComponent::AddVelocity(const Vec3 velocity) {
 
 }
 
+void CAIControllerComponent::MoveTo(const Vec3 cords) {
+
+
+
+}
+
+//Physicalizes the AI
 void CAIControllerComponent::Physicalize() {
 
 	//Physicalizes the AI as type livig
@@ -53,12 +61,12 @@ void CAIControllerComponent::Physicalize() {
 	physParams.type = PE_LIVING;
 	physParams.nSlot = GetOrMakeEntitySlotId();
 
-	physParams.mass = 80;
+	physParams.mass = m_controller.fMass;
 
 	pe_player_dimensions playerDimensions;
 
 	playerDimensions.bUseCapsule = true;
-	playerDimensions.sizeCollider = Vec3(1.f, 1.f, 2.f);
+	playerDimensions.sizeCollider = Vec3(m_controller.fRadius * 0.5f, 1.f, m_controller.fHeight * 0.5f);
 	
 	if (playerDimensions.bUseCapsule) {
 		playerDimensions.sizeCollider.z *= 0.5f;

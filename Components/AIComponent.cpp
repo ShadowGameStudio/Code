@@ -2,6 +2,7 @@
 
 #include "AIComponent.h"
 #include <CrySchematyc\Env\Elements\EnvComponent.h>
+#include "Player.h"
 
 static void RegisterAIComponent(Schematyc::IEnvRegistrar& registrar) {
 	Schematyc::CEnvRegistrationScope scope = registrar.Scope(IEntity::GetEntityScopeGUID());
@@ -28,21 +29,42 @@ void CAIComponent::Initialize() {
 }
 
 uint64 CAIComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_UPDATE);
+	return BIT64(ENTITY_EVENT_TIMER) | BIT64(ENTITY_EVENT_UPDATE) | BIT64(ENTITY_EVENT_START_GAME);
 }
 
 void CAIComponent::ProcessEvent(SEntityEvent & event) {
 
 	switch (event.event) {
+
+	case ENTITY_EVENT_TIMER:
+
+		if (event.nParam[0] == Timer_Speed) {
+
+			//Generates random moving speed
+			srand((unsigned)time(NULL));
+			int speed = rand() % 300 + 100;
+
+			m_fMoveSpeed = (float)speed;
+			m_bTimerSet = false;
+		}
+
+		break;
+
+	case ENTITY_EVENT_START_GAME:
+		m_bGameStarted = true;
+		break;
+
 	case ENTITY_EVENT_UPDATE:
 		
-		SEntityUpdateContext * pCtx = (SEntityUpdateContext*)event.nParam[0];
+		SEntityUpdateContext *pCtx = (SEntityUpdateContext*)event.nParam[0];
 		
 		if (gEnv->bServer)
 			UpdateMovementRequest(pCtx->fFrameTime);
 
 		UpdateAnimation(pCtx->fFrameTime);
-
+		UpdateVicinity(pCtx->fFrameTime);
+		UpdateLookOrientation(pCtx->fFrameTime);
+		UpdateMode(pCtx->fFrameTime);
 		break;
 	}
 
@@ -57,18 +79,3 @@ void CAIComponent::ReflectType(Schematyc::CTypeDesc<CAIComponent>& desc) {
 	desc.SetComponentFlags({ IEntityComponent::EFlags::Transform, IEntityComponent::EFlags::Socket, IEntityComponent::EFlags::Attach });
 
 }
-
-void CAIComponent::UpdateMovementRequest(float frameTime) {
-
-	//Create a Vec3
-	Vec3 velocity = ZERO;
-	//Sets the moving speed for the AI
-	float moveSpeed = 100.f;
-	//Adds these two together
-	velocity.y += moveSpeed * frameTime;
-	//Pushes the movement
-	m_pAIController->AddVelocity(GetEntity()->GetWorldRotation() * velocity);
-
-}
-
-void CAIComponent::UpdateAnimation(float frameTime) {}
