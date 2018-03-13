@@ -26,6 +26,13 @@ void CAIComponent::Initialize() {
 	m_walkFragmentId = m_pAnimationComponent->GetFragmentId("Walk");
 	m_rotateTagId = m_pAnimationComponent->GetTagId("Rotate");
 
+	//if (m_pAnimationComponent && m_pAIController) {
+
+	//	m_pAnimationComponent->ResetCharacter();
+	//	m_pAIController->Physicalize();
+
+	//}
+
 }
 
 uint64 CAIComponent::GetEventMask() const {
@@ -58,13 +65,13 @@ void CAIComponent::ProcessEvent(SEntityEvent & event) {
 		
 		SEntityUpdateContext *pCtx = (SEntityUpdateContext*)event.nParam[0];
 		
+		UpdateMode(pCtx->fFrameTime);
 		if (gEnv->bServer)
 			UpdateMovementRequest(pCtx->fFrameTime);
 
 		UpdateAnimation(pCtx->fFrameTime);
 		UpdateVicinity(pCtx->fFrameTime);
 		UpdateLookOrientation(pCtx->fFrameTime);
-		UpdateMode(pCtx->fFrameTime);
 		break;
 	}
 

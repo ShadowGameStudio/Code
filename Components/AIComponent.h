@@ -28,6 +28,7 @@ class CAIComponent final : public IEntityComponent {
 
 	enum EAIMode {
 
+		eAIM_None,
 		eAIM_Idle,
 		eAIM_Chasing,
 		eAIM_Attacking
@@ -42,7 +43,7 @@ public:
 	virtual void ProcessEvent(SEntityEvent& event) override;
 	static void ReflectType(Schematyc::CTypeDesc<CAIComponent>& desc);
 
-	EAIMode *GetAIMode() { return &AIMode; }
+	EAIMode *GetAIMode() { return &m_AIMode; }
 
 	template<typename T, size_t SAMPLES_COUNT>
 	class MovingAverage {
@@ -116,9 +117,5 @@ protected:
 	TagID m_rotateTagId;
 
 	Quat m_lookOrientation;
-
-public:
-
-	EAIMode AIMode;
-
+	EAIMode m_AIMode;
 };
