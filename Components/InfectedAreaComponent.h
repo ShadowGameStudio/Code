@@ -49,8 +49,13 @@ public:
 	SInfectedAreaProperties *GetInfectedProperties() { return &sInfectedAreaProperties; }
 
 	//Functions
-	void Entering(EntityId Id);
+	void Entering(int Id);
 	void Leaving(EntityId Id);
+
+	int EntToInt(EntityId Id) {
+		int iId = Id;
+		return iId;
+	}
 
 	void PlayerEntered(EntityId Id);
 

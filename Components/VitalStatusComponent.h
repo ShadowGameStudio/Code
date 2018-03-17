@@ -48,11 +48,14 @@ struct SVitalStatusComponent : public IEntityComponent {
 	void Regenerate();
 	void Add(float amount) { props.fValue += amount; }
 	void Remove(float amount) { props.fValue -= amount; }
+
 	void Set(float amount) { props.fValue = amount; }
 	void SetMax(float amount) { props.fMax = amount; }
 	void SetRegenerationRatio(float reg) { props.fRegenerationRatio = reg; }
+
 	void AlwaysRegenerate(bool alwaysRegenerate) { props.bAlwaysRegenerate = alwaysRegenerate; }
 	bool AlwaysRegenerate() { return props.bAlwaysRegenerate; }
+
 	float Get() { return props.fValue; }
 	float GetMax() { return props.fMax; }
 	float GetRegenerationRatio() { return props.fRegenerationRatio; }
@@ -62,5 +65,9 @@ protected:
 
 	SProperties props;
 	SProperties startProps;
+
+public:
+
+	bool bRegenerate = false;
 
 };

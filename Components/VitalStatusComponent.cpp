@@ -6,7 +6,7 @@
 
 void SVitalStatusComponent::Initialize() {
 
-	props.fValue = props.fValue;
+	props.fValue = props.fMax;
 	props = props;
 	InitializeClass();
 
@@ -31,24 +31,15 @@ void SVitalStatusComponent::ReflectType(Schematyc::CTypeDesc<SVitalStatusCompone
 //Regenerates health and/or Stamina
 void SVitalStatusComponent::Regenerate() {
 
-	bool bRegenerate = true;
-
-	//Check if it always should regenerate or not
-	//Such as regenerating while sprinting, otherwise it will not do that
-
-	if (!props.bAlwaysRegenerate) {
+	//If it should regenerate, continue
+	if (bRegenerate) {
 
 		bRegenerate = props.fValue == props.fLastValue;
 		props.fLastValue = props.fValue;
-	
-	}
-
-	if (bRegenerate) {
 
 		if (props.fValue < props.fMax)
 			props.fValue += props.fRegenerationRatio;
-	
-	}
 
+	}
 
 }

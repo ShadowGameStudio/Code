@@ -3,12 +3,7 @@
 
 void CAIComponent::UpdateMovementRequest(float frameTime) {
 
-	if (m_AIMode == eAIM_Idle || eAIM_None || eAIM_Attacking) {
-		//Sets the move speed of the AI to zero
-		m_fMoveSpeed = 0;
-
-	}
-	else if (m_AIMode == eAIM_Chasing) {
+	if (m_AIMode == eAIM_Chasing) {
 
 		//Create a Vec3
 		Vec3 velocity = ZERO;
@@ -22,6 +17,11 @@ void CAIComponent::UpdateMovementRequest(float frameTime) {
 		velocity.y += m_fMoveSpeed * frameTime;
 		//Pushes the movement
 		m_pAIController->AddVelocity(GetEntity()->GetWorldRotation() * velocity);
+	}
+	else if (m_AIMode == eAIM_Idle || eAIM_None || eAIM_Attacking) {
+		//Sets the move speed of the AI to zero
+		m_fMoveSpeed = 0;
+
 	}
 	else {
 		return;
@@ -128,6 +128,21 @@ void CAIComponent::UpdateLookOrientation(float frameTime) {
 		}
 
 	}
+	else if (m_AIMode == eAIM_Fleeing) {
+
+		// Update entity rotation as the player turns
+		// We only want to affect Z-axis rotation, zero pitch and roll 
+		Ang3 ypr = m_pAIController->CreateAnglesYPR(Matrix33(m_lookOrientation));
+		ypr.x -= 180;
+		ypr.y = 0;
+		ypr.z = 0;
+		if (m_bGameStarted) {
+			const Quat correctedOrientation = Quat(m_pAIController->CreateOrientationYPR(ypr));
+			// Send updated transform to the entity, only orientation changes
+			GetEntity()->SetPosRotScale(GetEntity()->GetWorldPos(), correctedOrientation, Vec3(1, 1, 1));
+		}
+
+	}
 	else if (m_AIMode == eAIM_None) {
 
 		return;
@@ -137,21 +152,35 @@ void CAIComponent::UpdateLookOrientation(float frameTime) {
 }
 
 void CAIComponent::UpdateMode(float frameTime) {
+	
+	//If it can get the AIs health component, continue
+	if (CHealthComponent *pHealth = m_pEntity->GetComponent<CHealthComponent>()) {
+		//If the AIs health is greater than or equal to 50, continue
+		if (pHealth->Get() > 50) {
 
-	//If the distance to player is greaer than the chase range, continue
-	if (m_fDistanceFromPlayer >= CHASE_RANGE) {
-		//Start looking at player
-		m_AIMode = eAIM_Idle;
-	}
-	//Else if the distance to player is less than chase range and greater than attack range, continue
-	else if(m_fDistanceFromPlayer <= CHASE_RANGE && m_fDistanceFromPlayer > ATTACK_RANGE){
-		//Start chasing player
-		m_AIMode = eAIM_Chasing;
-	}
-	//Else if distance to player is less than attack range, continue
-	else if (m_fDistanceFromPlayer <= ATTACK_RANGE) {
-		//Start attacking player
-		m_AIMode = eAIM_Attacking;
+			//If the distance to player is greater than the chase range, continue
+			if (m_fDistanceFromPlayer >= CHASE_RANGE) {
+				//Start looking at player
+				m_AIMode = eAIM_Idle;
+			}
+			//Else if the distance to player is less than chase range and greater than attack range, continue
+			else if (m_fDistanceFromPlayer <= CHASE_RANGE) {
+				//Start chasing player
+				m_AIMode = eAIM_Chasing;
+			}
+			//Else if distance to player is less than attack range, continue
+			else if (m_fDistanceFromPlayer <= ATTACK_RANGE) {
+				//Start attacking player
+				m_AIMode = eAIM_Attacking;
+			}
+
+		}
+		else {
+
+			m_AIMode = eAIM_Fleeing;
+
+		}
+
 	}
 
 }

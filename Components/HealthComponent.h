@@ -23,6 +23,8 @@ public:
 	void Update(float frameTime);
 	bool IsAlive() { return bIsAlive; }
 
+	bool bTimerSet = false;
+
 private:
 
 	bool bIsAlive = false;

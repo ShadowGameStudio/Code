@@ -32,7 +32,8 @@ public:
 	virtual string GetItemName() { return GetProperties()->sItemName;  }
 
 	virtual EItemType GetItemType() { return GetProperties()->eItemType; }
-	virtual float GetItemWeight() { return GetProperties()->itemWeight; }
+	virtual int GetItemLevel() { return GetProperties()->itemLevel; }
+	virtual float GetItemWeight() { return GetProperties()->fItemWeight; }
 
 	virtual void PickUp(IEntity *pNewOwner);
 	virtual void Drop(SItemComponent *pWeaponToDrop);

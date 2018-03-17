@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 
 #include "BaseFlowNodes.h"
+#include "CryFlowGraph\IFlowBaseNode.h"
 
 class CTestNode : public CFlowBaseNode<eNCT_Instanced> {
 

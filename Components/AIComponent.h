@@ -31,7 +31,8 @@ class CAIComponent final : public IEntityComponent {
 		eAIM_None,
 		eAIM_Idle,
 		eAIM_Chasing,
-		eAIM_Attacking
+		eAIM_Attacking,
+		eAIM_Fleeing
 
 	};
 

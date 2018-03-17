@@ -131,6 +131,7 @@ public:
 
 	bool bPlayerIsWearingGasmask = false;
 	bool bCanTakeInfectedDamage = true;
+	bool bPlayerHasBackpack = false;
 
 protected:
 	void UpdateMovementRequest(float frameTime);

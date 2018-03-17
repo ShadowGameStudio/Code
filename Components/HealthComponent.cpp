@@ -48,15 +48,8 @@ void CHealthComponent::Update(float frameTime) {
 
 	//Regeneration
 
-	if (bIsAlive)
+	if (bTimerSet) {
 		Regenerate();
-
-	if (props.fValue > props.fMax)
-		props.fValue = props.fMax;
-
-		bIsAlive = props.fValue > 0.f;
-
-	if (!bIsAlive)
-		props.fValue = 0.f;
+	}
 
 }

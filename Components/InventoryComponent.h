@@ -40,7 +40,7 @@ public:
 	void RemoveItem(SItemComponent *pNewItem);
 	void RemoveWeapon(SItemComponent *pNewItem);
 
-	void AttachToBack(SItemComponent *pWeaponToAttach, int slotId);
+	void AttachToBack(SItemComponent *pItemToAttach, int slotId);
 	void DetachFromBack(int slotId);
 	void Attach(SItemComponent *pWeaponToAttach);
 
@@ -56,6 +56,8 @@ public:
 		pSelectedWeapon = nullptr;
 		pLastSelectedWeapon = nullptr;
 	}
+	bool ActivateBackpack(SItemComponent *pBackpack);
+
 	SItemComponent *GetSelectedWeapon() { return pSelectedWeapon; }
 	SItemComponent *GetGasmask() { return pCurrentGasmask; }
 
@@ -68,11 +70,12 @@ protected:
 
 private:
 
-	float fInventoryCapKilo = 100.f;
-	float fCurrentWeight = 0.f;
+	float m_fInventoryCapKilo = 100.f;
+	float m_fCurrentWeight = 0.f;
 
 	SItemComponent *pWeapon[WEAPON_CAPACITY] = { nullptr };
 	SItemComponent *pGasmask[GASMASK_CAPACITY] = { nullptr };
+	SItemComponent *pBackpack = nullptr;
 
 	//UI Stuff
 

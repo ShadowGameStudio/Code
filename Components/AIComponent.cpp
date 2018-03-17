@@ -66,8 +66,7 @@ void CAIComponent::ProcessEvent(SEntityEvent & event) {
 		SEntityUpdateContext *pCtx = (SEntityUpdateContext*)event.nParam[0];
 		
 		UpdateMode(pCtx->fFrameTime);
-		if (gEnv->bServer)
-			UpdateMovementRequest(pCtx->fFrameTime);
+		UpdateMovementRequest(pCtx->fFrameTime);
 
 		UpdateAnimation(pCtx->fFrameTime);
 		UpdateVicinity(pCtx->fFrameTime);

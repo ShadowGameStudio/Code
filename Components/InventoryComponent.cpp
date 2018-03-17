@@ -18,6 +18,7 @@ void CInventoryComponent::Initialize() {
 	pUIInventory->CallFunction("Initialize");
 	//Makes sure the UI is hidden on start
 	pManager->StartAction(pInventoryHide, "InventorySystem");
+
 }
 
 uint64 CInventoryComponent::GetEventMask() const {
@@ -50,13 +51,13 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 		return false;
 
 	//If you have carry weight left continue
-	if (fCurrentWeight < fInventoryCapKilo) {
+	if (m_fCurrentWeight < m_fInventoryCapKilo) {
 
-		float fCapOver = fInventoryCapKilo - fCurrentWeight;
+		float fCapOver = m_fInventoryCapKilo - m_fCurrentWeight;
 		//If there is carrying weight enough over continue
 		if (fCapOver > pNewItem->GetItemWeight()) {
 			//If it is some sort of weapon(meele of non)
-			if (pNewItem->GetItemType() == 2 || 4) {
+			if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
 				//Set the arguments for the UI function call
 				SUIArguments args;
 				for (int i = 0; i < WEAPON_CAPACITY; i++) {
@@ -78,12 +79,27 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 				}
 			}
 			//If it is a backpack do this
-			else if(pNewItem->GetItemType() == 3){
-				//TODO: Attach backpack here
+			else if(pNewItem->GetItemType() == EItemType::Backpack){
+				
+				SUIArguments args;
+				if (!pBackpack) {
+					//Adds all the arguments for flash
+					//Assigns the backpack
+					pBackpack = pNewItem;
+					args.AddArgument<string>(pNewItem->GetItemName());
+					args.AddArgument<int>(pNewItem->GetEntityId());
+					args.AddArgument<int>(pNewItem->GetItemType());
+					args.AddArgument<float>(pNewItem->GetItemWeight());
+					//Calls the UI function
+					pUIInventory->CallFunction("AddBackpack", args);
+					return true;
 
-				return true;
+				}
+				else {
+					//TODO: show message saying: You can only carry one backpack at a time
+				}
 			}
-			else if (pNewItem->GetItemType() == 6) {
+			else if (pNewItem->GetItemType() == EItemType::Gasmask) {
 
 				SUIArguments args;
 				for (int i = 0; i < GASMASK_CAPACITY; i++) {
@@ -135,7 +151,7 @@ void CInventoryComponent::RemoveItem(SItemComponent *pNewItem) {
 		return;
 
 	//Remove the item weight from the current weight carried
-	fCurrentWeight -= pNewItem->GetItemWeight();
+	m_fCurrentWeight -= pNewItem->GetItemWeight();
 
 }
 
@@ -146,7 +162,7 @@ void CInventoryComponent::RemoveWeapon(SItemComponent *pNewItem) {
 		return;
 	
 	//Remove the weapon weight from the current weigth carried
-	fCurrentWeight -= pNewItem->GetItemWeight();
+	m_fCurrentWeight -= pNewItem->GetItemWeight();
 	int index = GetWeaponSlot(pNewItem);
 	//Check so that the slot isn't -1(invalid)
 	if (index > -1) {
@@ -158,10 +174,10 @@ void CInventoryComponent::RemoveWeapon(SItemComponent *pNewItem) {
 }
 
 //Attaches a weapon to players back
-void CInventoryComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slotId) {
+void CInventoryComponent::AttachToBack(SItemComponent *pItemToAttach, int slotId) {
 
 	//If it's not the right weapon or if the slot is less than zero, return
-	if (!pWeaponToAttach || slotId < 0)
+	if (!pItemToAttach || slotId < 0)
 		return;
 
 	//Create a string from the slotId int
@@ -169,21 +185,35 @@ void CInventoryComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slot
 	//Get the players PlayerComponent
 	CPlayerComponent *pPlayer = m_pEntity->GetComponent<CPlayerComponent>();
 	//Create attachment entity for the weapon
-	CEntityAttachment *pAttachmentWeapon = new CEntityAttachment();
+	CEntityAttachment *pAttachmentItem = new CEntityAttachment();
 	//Set the above entitys ID to the weapons
-	pAttachmentWeapon->SetEntityId(pWeaponToAttach->GetEntityId());
+	pAttachmentItem->SetEntityId(pItemToAttach->GetEntityId());
 
 	//If it can get the players character, continue
 	if (ICharacterInstance *pCharacter = pPlayer->GetAnimations()->GetCharacter()) {
 		//If it can get the characters attachments, continue
 		if(IAttachmentManager *pAttMan = pCharacter->GetIAttachmentManager()){
-			
 			//Create string to get the correct character attachment
-			string sAttName = "back_att_0" + sSlotString;
+			string sAttName;
+
+			//If the item type is Backpack, continue
+			if (pItemToAttach->GetItemType() == EItemType::Backpack) {
+				//Set the attachment to the backpack attachment
+				sAttName = "backpack_att_00";
+				//Set that the player is wearing a backpack
+				pPlayer->bPlayerHasBackpack = true;
+				ActivateBackpack(pItemToAttach);
+			}
+			//Else, continue
+			else {
+				//Set the attachment to the back attachment
+				sAttName = "back_att_0" + sSlotString;
+			}
+
 			//If it can get the specified attachment, continue
 			if (IAttachment *pAttachment = pAttMan->GetInterfaceByName(sAttName)) {
 				//Attach the weapon
-				pAttachment->AddBinding(pAttachmentWeapon);
+				pAttachment->AddBinding(pAttachmentItem);
 			}
 
 		}
@@ -247,6 +277,18 @@ void CInventoryComponent::Attach(SItemComponent *pItemToAttach) {
 				//Attach it to the face
 				AttachToFace(pItemToAttach);
 			}
+
+		}
+
+	}
+	//Else if it's a backpack, continue
+	else if (pItemToAttach->GetItemType() == EItemType::Backpack) {
+		//If the backpack in the inventory is the passed in one, continue
+		if (pBackpack == pItemToAttach) {
+			//Detach the backpack from the player
+			pItemToAttach->GetEntity()->DetachThis();
+			//Attach it to the back
+			AttachToBack(pItemToAttach, 0);
 
 		}
 
@@ -404,6 +446,43 @@ void CInventoryComponent::DeselectWeapon() {
 }
 
 //Inventory UI
+
+bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
+
+	//If the item actually is a backpack, continue
+	if (pBackpack->GetItemType() == EItemType::Backpack) {
+
+		//If the backpacks level is one, continue
+		if (pBackpack->GetItemLevel() == 1) {
+			//Add 25 to the max weight
+			m_fInventoryCapKilo += 25;
+			return true;
+
+		}
+		//Else if the level is two, continue
+		else if (pBackpack->GetItemLevel() == 2) {
+			//Add 50 to the max weight
+			m_fInventoryCapKilo += 50;
+			return true;
+
+		}
+		//Else if the level is three, continue
+		else if (pBackpack->GetItemLevel() == 3) {
+			//Add 75 to the max weight
+			m_fInventoryCapKilo += 75;
+			return true;
+
+		}
+		//Else, return false
+		else {
+			return false;
+		}
+
+	}
+
+	return false;
+
+}
 
 //Shows/Hides the inventory
 void CInventoryComponent::Show() {
