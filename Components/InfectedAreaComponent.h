@@ -49,7 +49,7 @@ public:
 	SInfectedAreaProperties *GetInfectedProperties() { return &sInfectedAreaProperties; }
 
 	//Functions
-	void Entering(int Id);
+	void Entering(EntityId Id);
 	void Leaving(EntityId Id);
 
 	int EntToInt(EntityId Id) {

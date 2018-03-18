@@ -108,7 +108,7 @@ static void ReflectType(Schematyc::CTypeDesc<SItemProperties>& desc) {
 
 	desc.SetGUID("{0E44FE1E-A4EF-440D-B4D1-C95046005B09}"_cry_guid);
 	desc.SetLabel("Item Properties");
-	desc.SetDescription("Item  Properties");
+	desc.SetDescription("Item Properties");
 	desc.AddMember(&SItemProperties::sRenderProperties, 'renp', "RenderProperties", "Render Properties", "All the render settings for current item", SRenderProperties());
 	desc.AddMember(&SItemProperties::sPhysicsProperties, 'phyp', "PhysicsProperties", "Physics Properties", "All the physics settings for current item", SPhysicsProperties());
 	desc.AddMember(&SItemProperties::eItemType, 'eit', "ItemType", "Item Type", "Sets the items type", EItemType());

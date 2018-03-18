@@ -16,7 +16,7 @@ static void RegisterInfectedAreaComponent(Schematyc::IEnvRegistrar& registrar) {
 			auto pEntering = SCHEMATYC_MAKE_ENV_FUNCTION(&CInfectedAreaComponent::Entering, "{C0D4C3C9-8099-4CD7-B1FE-EC3043A36E6F}"_cry_guid, "Entering");
 			pEntering->SetDescription("Should be called when player is entering an area");
 			pEntering->SetFlags({ Schematyc::EEnvFunctionFlags::Member });
-			pEntering->BindInput(1, 'eid', "EntityId", "The entity id of the player leaving");
+			pEntering->BindInput(1, 'eid', "EntityId", "The entity id of the player leaving", Schematyc::ExplicitEntityId());
 			componentScope.Register(pEntering);
 
 			//Exposes the Leaving function to Schematyc so it can be called from there
@@ -96,13 +96,13 @@ void CInfectedAreaComponent::ReflectType(Schematyc::CTypeDesc<CInfectedAreaCompo
 }
 
 //Called when a player is leaving an infected area
-void CInfectedAreaComponent::Entering(int Id) {
+void CInfectedAreaComponent::Entering(EntityId Id) {
 	//Set that there is a player inside
 	bIsInside = true;
 	//Increment the player count inside the area
 	iPlayerCount++;
 	//Calls the function that adds the player to the area and such
-	//PlayerEntered(Id);
+	PlayerEntered(Id);
 
 }
 
