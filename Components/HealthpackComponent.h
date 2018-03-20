@@ -36,7 +36,7 @@ public:
 	CHealthpackComponent() = default;
 
 	virtual void InitializeClass() override;
-	virtual void ProcessEventClass(SEntityEvent& event) override;
+	virtual void ProcessEventClass(const SEntityEvent& event) override;
 	static void ReflectType(Schematyc::CTypeDesc<CHealthpackComponent>& desc);
 
 	CHealthComponent HP;

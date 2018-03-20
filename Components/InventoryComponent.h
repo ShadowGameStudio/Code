@@ -10,7 +10,6 @@ Purpose : Inventory System will allow the player to store items.
 
 #include "StdAfx.h"
 #include <CryEntitySystem/IEntityComponent.h>
-#include "steam\steam_api.h"
 #include "FlashUI\FlashUI.h"
 
 #define WEAPON_CAPACITY 2
@@ -29,7 +28,7 @@ public:
 
 	virtual void Initialize() override;
 	virtual uint64 GetEventMask() const override;
-	virtual void ProcessEvent(SEntityEvent& event) override;
+	virtual void ProcessEvent(const SEntityEvent& event) override;
 
 	//Inventory System
 

@@ -16,7 +16,7 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterHealthpack)
 
 void CHealthpackComponent::InitializeClass() {}
 
-void CHealthpackComponent::ProcessEventClass(SEntityEvent & event) {}
+void CHealthpackComponent::ProcessEventClass(const SEntityEvent & event) {}
 
 void CHealthpackComponent::ReflectType(Schematyc::CTypeDesc<CHealthpackComponent>& desc) {
 

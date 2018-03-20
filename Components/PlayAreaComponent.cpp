@@ -39,10 +39,10 @@ void CPlayAreaComponent::Initialize() {
 }
 
 uint64 CPlayAreaComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_TIMER) | BIT64(ENTITY_EVENT_UPDATE) | BIT64(ENTITY_EVENT_LEVEL_LOADED);
+	return ENTITY_EVENT_BIT(ENTITY_EVENT_TIMER) | ENTITY_EVENT_BIT(ENTITY_EVENT_UPDATE) | ENTITY_EVENT_BIT(ENTITY_EVENT_LEVEL_LOADED);
 }
 
-void CPlayAreaComponent::ProcessEvent(SEntityEvent & event) {
+void CPlayAreaComponent::ProcessEvent(const SEntityEvent & event) {
 
 	switch (event.event) {
 	case ENTITY_EVENT_TIMER:

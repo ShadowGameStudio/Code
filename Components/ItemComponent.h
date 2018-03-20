@@ -20,8 +20,8 @@ public:
 	virtual void Initialize() override;
 	virtual void InitializeClass() = 0;
 	virtual uint64 GetEventMask() const override;
-	virtual void ProcessEvent(SEntityEvent& event) override;
-	virtual void ProcessEventClass(SEntityEvent& event) = 0;
+	virtual void ProcessEvent(const SEntityEvent& event) override;
+	virtual void ProcessEventClass(const SEntityEvent& event) = 0;
 	static void ReflectType(Schematyc::CTypeDesc<SItemComponent>& desc);
 	//geometry and physics
 	virtual void LoadGeometry();

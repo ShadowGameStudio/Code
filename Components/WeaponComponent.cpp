@@ -19,7 +19,7 @@ void CWeaponComponent::InitializeClass() {
 
 }
 
-void CWeaponComponent::ProcessEventClass(SEntityEvent & event) {
+void CWeaponComponent::ProcessEventClass(const SEntityEvent & event) {
 
 	switch (event.event) {
 	case ENTITY_EVENT_COLLISION:

@@ -30,8 +30,6 @@ bool CGamePlugin::Initialize(SSystemGlobalEnvironment& env, const SSystemInitPar
 {
 	// Register for engine system events, in our case we need ESYSTEM_EVENT_GAME_POST_INIT to load the map
 	gEnv->pSystem->GetISystemEventDispatcher()->RegisterListener(this, "CGamePlugin");
-	// Listen for client connection events, in order to create the local player
-	gEnv->pGameFramework->AddNetworkedClientListener(*this);
 
 	return true;
 }

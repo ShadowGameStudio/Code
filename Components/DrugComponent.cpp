@@ -15,7 +15,7 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterFoodComponent)
 
 void CDrugComponent::InitializeClass() {}
 
-void CDrugComponent::ProcessEventClass(SEntityEvent & event) {
+void CDrugComponent::ProcessEventClass(const SEntityEvent & event) {
 
 	switch (event.event) {
 	case ENTITY_EVENT_TIMER:

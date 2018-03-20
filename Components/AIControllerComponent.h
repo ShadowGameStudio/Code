@@ -37,7 +37,7 @@ public:
 	CAIControllerComponent() = default;
 
 	virtual void Initialize() final;
-	virtual void ProcessEvent(SEntityEvent& event) final;
+	virtual void ProcessEvent(const SEntityEvent& event) final;
 	virtual uint64 GetEventMask() const final;
 	static void ReflectType(Schematyc::CTypeDesc<CAIControllerComponent>& desc);
 

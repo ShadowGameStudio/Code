@@ -18,7 +18,7 @@ void CHealthComponent::InitializeClass() {
 
 }
 
-void CHealthComponent::ProcessClassEvent(SEntityEvent & event) {
+void CHealthComponent::ProcessClassEvent(const SEntityEvent & event) {
 
 	switch (event.event) {
 	case ENTITY_EVENT_UPDATE:

@@ -35,10 +35,10 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterInfectedAreaComponent )
 void CInfectedAreaComponent::Initialize() {}
 
 uint64 CInfectedAreaComponent::GetEventMask() const {
-	return ENTITY_EVENT_TIMER | ENTITY_EVENT_UPDATE;
+	return ENTITY_EVENT_BIT(ENTITY_EVENT_TIMER) | ENTITY_EVENT_BIT(ENTITY_EVENT_UPDATE);
 }
 
-void CInfectedAreaComponent::ProcessEvent(SEntityEvent & event) {
+void CInfectedAreaComponent::ProcessEvent(const SEntityEvent & event) {
 
 	switch (event.event) {
 		case ENTITY_EVENT_TIMER:

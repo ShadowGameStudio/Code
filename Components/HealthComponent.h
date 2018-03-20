@@ -16,7 +16,7 @@ public:
 	CHealthComponent() = default;
 
 	virtual void InitializeClass() override;
-	virtual void ProcessClassEvent(SEntityEvent& event) override;
+	virtual void ProcessClassEvent(const SEntityEvent& event) override;
 	static void ReflectType(Schematyc::CTypeDesc<CHealthComponent>& desc);
 	
 	//Healthsystem

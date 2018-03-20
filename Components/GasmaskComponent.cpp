@@ -14,7 +14,7 @@ static void RegisterGasmask(Schematyc::IEnvRegistrar& registrar) {
 CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterGasmask)
 
 void CGasmaskComponent::InitializeClass() {}
-void CGasmaskComponent::ProcessEventClass(SEntityEvent & event) {}
+void CGasmaskComponent::ProcessEventClass(const SEntityEvent & event) {}
 
 void CGasmaskComponent::ReflectType(Schematyc::CTypeDesc<CGasmaskComponent>& desc) {
 

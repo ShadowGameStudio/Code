@@ -36,10 +36,10 @@ void CAIComponent::Initialize() {
 }
 
 uint64 CAIComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_TIMER) | BIT64(ENTITY_EVENT_UPDATE) | BIT64(ENTITY_EVENT_START_GAME);
+	return ENTITY_EVENT_BIT(ENTITY_EVENT_TIMER) | ENTITY_EVENT_BIT(ENTITY_EVENT_UPDATE) | ENTITY_EVENT_BIT(ENTITY_EVENT_START_GAME);
 }
 
-void CAIComponent::ProcessEvent(SEntityEvent & event) {
+void CAIComponent::ProcessEvent(const SEntityEvent & event) {
 
 	switch (event.event) {
 

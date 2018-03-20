@@ -25,7 +25,7 @@ uint64 CInventoryComponent::GetEventMask() const {
 	return uint64();
 }
 
-void CInventoryComponent::ProcessEvent(SEntityEvent& event) {}
+void CInventoryComponent::ProcessEvent(const SEntityEvent& event) {}
 
 //Returns the slot that the passed in weapon is located in
 int CInventoryComponent::GetWeaponSlot(SItemComponent *pNewWeapon) {
@@ -486,8 +486,6 @@ bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
 
 //Shows/Hides the inventory
 void CInventoryComponent::Show() {
-
-	//TODO: Add Steam name
 
 	//Freeze the player when the inventory is open
 	m_pEntity->GetComponent<CPlayerComponent>()->FreezePlayer(bIsInventoryOpened);

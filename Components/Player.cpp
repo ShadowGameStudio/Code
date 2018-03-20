@@ -81,10 +81,10 @@ void CPlayerComponent::LocalPlayerInitialize() {
 
 uint64 CPlayerComponent::GetEventMask() const
 {
-	return BIT64(ENTITY_EVENT_START_GAME) | BIT64(ENTITY_EVENT_UPDATE) | BIT64(ENTITY_EVENT_TIMER) | BIT64(ENTITY_EVENT_NET_BECOME_LOCAL_PLAYER);
+	return ENTITY_EVENT_BIT(ENTITY_EVENT_START_GAME) | ENTITY_EVENT_BIT(ENTITY_EVENT_UPDATE) | ENTITY_EVENT_BIT(ENTITY_EVENT_TIMER) | ENTITY_EVENT_BIT(ENTITY_EVENT_NET_BECOME_LOCAL_PLAYER);
 }
 
-void CPlayerComponent::ProcessEvent(SEntityEvent& event)
+void CPlayerComponent::ProcessEvent(const SEntityEvent& event)
 {
 	switch (event.event)
 	{
@@ -191,7 +191,7 @@ void CPlayerComponent::SpawnAtSpawnPoint()
 		return;
 
 	// Spawn at first default spawner
-	auto *pEntityIterator = gEnv->pEntitySystem->GetEntityIterator();
+	IEntityItPtr pEntityIterator = gEnv->pEntitySystem->GetEntityIterator();
 	pEntityIterator->MoveFirst();
 
 	while (!pEntityIterator->IsEnd())

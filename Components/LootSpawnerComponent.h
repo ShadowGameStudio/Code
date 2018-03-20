@@ -45,7 +45,7 @@ public:
 
 	virtual void Initialize() override;
 	virtual uint64 GetEventMask() const override;
-	virtual void ProcessEvent(SEntityEvent& event) override;
+	virtual void ProcessEvent(const SEntityEvent& event) override;
 	static void ReflectType(Schematyc::CTypeDesc<CLootSpawnerComponent>& desc);
 
 	SLootSpawnerProperties *GetProperties() { return &sLootSpawnerProperties; }

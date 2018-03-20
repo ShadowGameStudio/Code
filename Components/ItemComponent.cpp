@@ -12,10 +12,10 @@
 }
  
  uint64 SItemComponent::GetEventMask() const {
-	 return BIT64(ENTITY_EVENT_COMPONENT_PROPERTY_CHANGED) | BIT64(ENTITY_EVENT_COLLISION) | BIT64(ENTITY_EVENT_TIMER);
+	 return ENTITY_EVENT_BIT(ENTITY_EVENT_COMPONENT_PROPERTY_CHANGED) | ENTITY_EVENT_BIT(ENTITY_EVENT_COLLISION) | ENTITY_EVENT_BIT(ENTITY_EVENT_TIMER);
 }
  
- void SItemComponent::ProcessEvent(SEntityEvent & event) {
+ void SItemComponent::ProcessEvent(const SEntityEvent & event) {
 	 
 	switch (event.event) {
 	case ENTITY_EVENT_COMPONENT_PROPERTY_CHANGED:

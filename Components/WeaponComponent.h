@@ -77,7 +77,7 @@ public:
 	CWeaponComponent() = default;
 
 	virtual void InitializeClass() override;
-	virtual void ProcessEventClass(SEntityEvent& event) override;
+	virtual void ProcessEventClass(const SEntityEvent& event) override;
 	static void ReflectType(Schematyc::CTypeDesc<CWeaponComponent>& desc);
 
 	bool GetIsMeele() { return GetWeaponProperties()->bIsMeele; }

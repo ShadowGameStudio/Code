@@ -35,10 +35,10 @@ void CPlayAreaSpawnComponent::Initialize() {
 }
 
 uint64 CPlayAreaSpawnComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_START_LEVEL), BIT64(ENTITY_EVENT_COMPONENT_PROPERTY_CHANGED);
+	return ENTITY_EVENT_BIT(ENTITY_EVENT_START_LEVEL), ENTITY_EVENT_BIT(ENTITY_EVENT_COMPONENT_PROPERTY_CHANGED);
 }
 
-void CPlayAreaSpawnComponent::ProcessEvent(SEntityEvent & event) {
+void CPlayAreaSpawnComponent::ProcessEvent(const SEntityEvent & event) {
 
 	switch (event.event) {
 	case ENTITY_EVENT_START_LEVEL:

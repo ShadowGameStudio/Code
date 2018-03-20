@@ -13,10 +13,10 @@ void SVitalStatusComponent::Initialize() {
 }
 
 uint64 SVitalStatusComponent::GetEventMask() const {
-	return BIT64(ENTITY_EVENT_UPDATE);
+	return ENTITY_EVENT_BIT(ENTITY_EVENT_UPDATE);
 }
 
-void SVitalStatusComponent::ProcessEvent(SEntityEvent & event) {
+void SVitalStatusComponent::ProcessEvent(const SEntityEvent & event) {
 
 	ProcessClassEvent(event);
 
