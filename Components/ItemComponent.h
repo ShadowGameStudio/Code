@@ -13,9 +13,19 @@ Purpose : Base structure for items. All types of items will derive from here.
 #include "CryNetwork\Rmi.h"
 
 struct SItemComponent : public IEntityComponent {
-public:
+
+	struct SPickUpParams {
+
+		EntityId Id;
+
+		void SerializeWith(TSerialize ser) {
+			ser.Value("EntityId", Id, 'eid');
+		}
+
+	};
+
 	SItemComponent() = default;
-//	SItemComponent::~SItemComponent();
+	virtual ~SItemComponent() = default;
 
 	virtual void Initialize() override;
 	virtual void InitializeClass() = 0;
@@ -35,10 +45,14 @@ public:
 	virtual int GetItemLevel() { return GetProperties()->itemLevel; }
 	virtual float GetItemWeight() { return GetProperties()->fItemWeight; }
 
-	virtual void PickUp(IEntity *pNewOwner);
 	virtual void Drop(SItemComponent *pWeaponToDrop);
 	virtual bool IsPickable();
 
+	//Network
+	bool ServerPickup(SPickUpParams&& p, INetChannel* pNetChannel);
+	bool ClientPickup(SPickUpParams&& p, INetChannel* pNetChannel);
+	void RequestPickup(IEntity *pNewOwner);
+	//Network
 protected:
 	SItemProperties sItemProperties, sPrevItemProperties;
 

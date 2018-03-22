@@ -213,9 +213,9 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 		return;
 
 	//Add the item to the inventory
-	if (GetInventory()->AddItem(pNewItem)) {
+	if (GetInventory()->RequestAddItem(pNewItem)) {
 		//Pick the item up
-		pNewItem->PickUp(m_pEntity);
+		pNewItem->RequestPickup(m_pEntity);
 		//Attach to back if it's a weapon
 		GetInventory()->Attach(pNewItem);
 

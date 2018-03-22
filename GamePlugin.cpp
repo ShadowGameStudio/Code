@@ -17,7 +17,12 @@
 CGamePlugin::~CGamePlugin()
 {
 	// Remove any registered listeners before 'this' becomes invalid
-	gEnv->pGameFramework->RemoveNetworkedClientListener(*this);
+	if (gEnv->pGameFramework != nullptr) {
+
+		gEnv->pGameFramework->RemoveNetworkedClientListener(*this);
+	
+	}
+
 	gEnv->pSystem->GetISystemEventDispatcher()->RemoveListener(this);
 
 	if (gEnv->pSchematyc)
@@ -63,10 +68,13 @@ void CGamePlugin::OnSystemEvent(ESystemEvent event, UINT_PTR wparam, UINT_PTR lp
 		// Called when the game framework has initialized and we are ready for game logic to start
 	case ESYSTEM_EVENT_GAME_POST_INIT:
 	{
+		// Listen for client connection events, in order to create the player
+		gEnv->pGameFramework->AddNetworkedClientListener(*this);
+
 		// Don't need to load the map in editor
 		if (!gEnv->IsEditor())
 		{
-			gEnv->pConsole->ExecuteString("map testmap", false, true);
+			gEnv->pConsole->ExecuteString("map example", false, true);
 		}
 
 	}

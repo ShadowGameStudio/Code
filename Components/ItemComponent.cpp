@@ -2,6 +2,11 @@
 #include "ItemComponent.h"
 #include <CrySchematyc\Env\Elements\EnvComponent.h>
 
+//Network shorts
+using ServerPickupRMI = SRmi<RMI_WRAP(&SItemComponent::ServerPickup)>;
+using ClientPickupRMI = SRmi<RMI_WRAP(&SItemComponent::ClientPickup)>;
+
+
  void SItemComponent::Initialize() {
 	 
 	//Load basic item stuff
@@ -9,6 +14,26 @@
 	Physicalize();
 	CreateItemName();
 	InitializeClass();
+
+	//Pickup RMI(Server)
+	{
+		const bool bIsServerCall = true;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		ServerPickupRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	}
+	//Pickup RMI(Client)
+	{
+		const bool bIsServerCall = false;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		ClientPickupRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	}
+
+	m_pEntity->GetNetEntity()->BindToNetwork();
+
 }
  
  uint64 SItemComponent::GetEventMask() const {
@@ -74,31 +99,6 @@
 		 
 }
 
- void SItemComponent::PickUp(IEntity *pNewOwner) {
-
-	 if (!pNewOwner)
-		 return;
-
-	 pOwnerEntity = pNewOwner;
-	 pOwnerEntity->AttachChild(m_pEntity);
-
-
-	 //filter collision
-
-	 pe_action_add_constraint constraint;
-	 constraint.pt[0] = ZERO;
-	 constraint.flags = constraint_ignore_buddy | constraint_inactive;
-	 constraint.pBuddy = pOwnerEntity->GetPhysicalEntity();
-	 iChildConstraintId = m_pEntity->GetPhysicalEntity()->Action(&constraint);
-
-	 //add collision filtering to owner
-
-	 constraint.flags |= constraint_inactive;
-	 constraint.pBuddy = m_pEntity->GetPhysicalEntity();
-	 iOwnerConstraintId = pOwnerEntity->GetPhysicalEntity()->Action(&constraint);
-
- }
-
  void SItemComponent::Drop(SItemComponent *pWeaponToDrop) {
 	 
 	if (!pOwnerEntity)
@@ -137,3 +137,77 @@
 	 
 	 return !pOwnerEntity;	 
 }
+
+ //Pickup called on the server
+ bool SItemComponent::ServerPickup(SPickUpParams && p, INetChannel * pNetChannel) {
+	 //Invoke the pickup on all the clients
+	 ClientPickupRMI::InvokeOnAllClients(this, SPickUpParams{ p.Id });
+	 
+	 return true;
+ }
+
+ bool SItemComponent::ClientPickup(SPickUpParams && p, INetChannel * pNetChannel) {
+
+	 IEntity *pNewOwner = gEnv->pEntitySystem->GetEntity(p.Id);
+
+	 if (!pNewOwner)
+		 return false;
+
+	 pOwnerEntity = pNewOwner;
+	 pOwnerEntity->AttachChild(m_pEntity);
+
+
+	 //filter collision
+
+	 pe_action_add_constraint constraint;
+	 constraint.pt[0] = ZERO;
+	 constraint.flags = constraint_ignore_buddy | constraint_inactive;
+	 constraint.pBuddy = pOwnerEntity->GetPhysicalEntity();
+	 iChildConstraintId = m_pEntity->GetPhysicalEntity()->Action(&constraint);
+
+	 //add collision filtering to owner
+
+	 constraint.flags |= constraint_inactive;
+	 constraint.pBuddy = m_pEntity->GetPhysicalEntity();
+	 iOwnerConstraintId = pOwnerEntity->GetPhysicalEntity()->Action(&constraint);
+
+	 return true;
+ }
+
+ //Called when the player wants to pickup
+ void SItemComponent::RequestPickup(IEntity *pNewOwner) {
+ 
+	 //It if already is server, continue
+	 if (gEnv->bServer) {
+		 
+		 if (!pNewOwner)
+			 return;
+
+		 pOwnerEntity = pNewOwner;
+		 pOwnerEntity->AttachChild(m_pEntity);
+
+
+		 //filter collision
+
+		 pe_action_add_constraint constraint;
+		 constraint.pt[0] = ZERO;
+		 constraint.flags = constraint_ignore_buddy | constraint_inactive;
+		 constraint.pBuddy = pOwnerEntity->GetPhysicalEntity();
+		 iChildConstraintId = m_pEntity->GetPhysicalEntity()->Action(&constraint);
+
+		 //add collision filtering to owner
+
+		 constraint.flags |= constraint_inactive;
+		 constraint.pBuddy = m_pEntity->GetPhysicalEntity();
+		 iOwnerConstraintId = pOwnerEntity->GetPhysicalEntity()->Action(&constraint);
+
+	 }
+	 //If it's not, continue
+	 else {
+		 //Get the new item owners EntityId
+		 EntityId Id = pNewOwner->GetId();
+		 //Send the request to the server
+		 ServerPickupRMI::InvokeOnServer(this, SPickUpParams{ Id });
+	 }
+
+ }

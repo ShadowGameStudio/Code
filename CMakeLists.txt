@@ -92,8 +92,9 @@ PRIVATE
     "${CRYENGINE_DIR}/Code/CryEngine/CryAction"
     "${CRYENGINE_DIR}/Code/CryEngine/CrySchematyc/Core/Interface"
     "${CRYENGINE_DIR}/Code/CryPlugins/CryDefaultEntities/Module"
-    "${CRYENGINE_DIR}/Code/CryPlugins/CryLobby/Module"
-    "${CRYENGINE_DIR}/Code/CryPlugins/CryLobby/Interface"
+	"${CRYENGINE_DIR}/Code/CryPlugins/CryGamePlatform/Module"
+	"${CRYENGINE_DIR}/Code/CryPlugins/CryGamePlatform/Interface"
+	"${CRYENGINE_DIR}/Code/SDKs/Steamworks/public"
 )
 
 

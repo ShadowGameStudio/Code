@@ -22,6 +22,18 @@ struct IUIAction;
 struct IUIActionManager;
 
 class CInventoryComponent : public IEntityComponent {
+
+	struct SAddItemParams {
+
+		EntityId Id;
+		uint16 playerChannelId;
+
+		void SerializeWith(TSerialize ser) {
+			ser.Value("EntityId", Id, 'eid');
+			ser.Value("PlayerChannelId", playerChannelId, 'ui16');
+		}
+	};
+
 public:
 	CInventoryComponent() = default;
 	//CInventoryComponent::~CInventoryComponent();
@@ -62,6 +74,12 @@ public:
 
 	void Show();
 
+	//Network
+	bool ServerAddItem(SAddItemParams&& p, INetChannel *pNetChannel);
+	bool ClientAddItem(SAddItemParams&& p, INetChannel *pNetChannel);
+	bool RequestAddItem(SItemComponent *pNewItem);
+	//Network
+
 protected:
 
 	void SelectWeapon(SItemComponent *pWeaponToSelect);
@@ -81,9 +99,10 @@ private:
 	IUIElement *pUIInventory;
 	IUIAction *pInventoryShow;
 	IUIAction *pInventoryHide;
-	IUIActionManager *pManager;
 	IUIAction *pInventoryShowCursor;
 	IUIAction *pInventoryHideCursor;
+	IUIAction *pShowCrosshair;
+	IUIActionManager *pManager;
 
 	//Item selection
 

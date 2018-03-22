@@ -4,6 +4,12 @@
 #include <FlashUI\FlashUI.h>
 #include "InventoryEvents.h"
 #include "ItemProperties.h"
+#include <CryNetwork\Rmi.h>
+
+#include <Steam\SteamUser.h>
+
+using ServerAddItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ServerAddItem)>;
+using ClientAddItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ClientAddItem)>;
 
 void CInventoryComponent::Initialize() {
 
@@ -13,11 +19,31 @@ void CInventoryComponent::Initialize() {
 	pInventoryHide = gEnv->pFlashUI->GetUIAction("inventoryhide");
 	pInventoryShowCursor = gEnv->pFlashUI->GetUIAction("inventoryshowcursor");
 	pInventoryHideCursor = gEnv->pFlashUI->GetUIAction("inventoryhidecursor");
+	pShowCrosshair = gEnv->pFlashUI->GetUIAction("showcrosshair");
 	pManager = gEnv->pFlashUI->GetUIActionManager();
 	//Starts the initialization of the actual UI
 	pUIInventory->CallFunction("Initialize");
 	//Makes sure the UI is hidden on start
 	pManager->StartAction(pInventoryHide, "InventorySystem");
+	pManager->StartAction(pShowCrosshair, "Crosshair");
+
+	//AddItem RMI(Server)
+	{
+		const bool bIsServerCall = true;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		ServerAddItemRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	}
+
+	//AddItem RMI(Client)
+	{
+		const bool bIsServerCall = false;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		ClientAddItemRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	}
 
 }
 
@@ -487,6 +513,17 @@ bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
 //Shows/Hides the inventory
 void CInventoryComponent::Show() {
 
+	using namespace Cry::GamePlatform::Steam;
+
+	//CUser *pUser;
+
+	//string sPlayerName = pUser->GetNickname();
+	//{
+	//	SUIArguments args;
+	//	args.AddArgument<string>(sPlayerName);
+	//	pUIInventory->CallFunction("SetPlayerName", args);
+	//}
+
 	//Freeze the player when the inventory is open
 	m_pEntity->GetComponent<CPlayerComponent>()->FreezePlayer(bIsInventoryOpened);
 	//The UI arguments
@@ -508,4 +545,141 @@ void CInventoryComponent::Show() {
 		pManager->StartAction(pInventoryHideCursor, "InventorySystem");
 	}
 
+}
+
+//Called by RequestAddItem
+bool CInventoryComponent::ServerAddItem(SAddItemParams&& p, INetChannel* pNetChannel) {
+	//Invokes the function on the client picking the item up
+	ClientAddItemRMI::InvokeOnClient(this, SAddItemParams{ p.Id, p.playerChannelId }, p.playerChannelId);
+
+	return true;
+}
+
+//Adds the item to the client
+bool CInventoryComponent::ClientAddItem(SAddItemParams&& p, INetChannel* pNetChannel) {
+
+	//Gets the entity from the entity Id
+	IEntity *pNewEntity = gEnv->pEntitySystem->GetEntity(p.Id);
+	//Gets the item component from the entity
+	SItemComponent *pNewItem = pNewEntity->GetComponent<SItemComponent>();
+
+	//If not the item you are looking at, return
+	if (!pNewItem)
+		return false;
+
+	//If you have carry weight left continue
+	if (m_fCurrentWeight < m_fInventoryCapKilo) {
+
+		float fCapOver = m_fInventoryCapKilo - m_fCurrentWeight;
+		//If there is carrying weight enough over continue
+		if (fCapOver > pNewItem->GetItemWeight()) {
+			//If it is some sort of weapon(meele of non)
+			if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
+				//Set the arguments for the UI function call
+				SUIArguments args;
+				for (int i = 0; i < WEAPON_CAPACITY; i++) {
+					//If there is no weapon in the slot, continue
+					if (!pWeapon[i]) {
+						//Sets a slot to the weapon
+						pWeapon[i] = pNewItem;
+						args.AddArgument<int>(i);
+						args.AddArgument<string>(pNewItem->GetItemName());
+						args.AddArgument<int>(pNewItem->GetEntityId());
+						args.AddArgument<int>(pNewItem->GetItemType());
+						args.AddArgument<float>(pNewItem->GetItemWeight());
+						//Calls the UI function
+						pUIInventory->CallFunction("AddWeapon", args);
+						return true;
+
+					}
+
+				}
+			}
+			//If it is a backpack do this
+			else if (pNewItem->GetItemType() == EItemType::Backpack) {
+
+				SUIArguments args;
+				if (!pBackpack) {
+					//Adds all the arguments for flash
+					//Assigns the backpack
+					pBackpack = pNewItem;
+					args.AddArgument<string>(pNewItem->GetItemName());
+					args.AddArgument<int>(pNewItem->GetEntityId());
+					args.AddArgument<int>(pNewItem->GetItemType());
+					args.AddArgument<float>(pNewItem->GetItemWeight());
+					//Calls the UI function
+					pUIInventory->CallFunction("AddBackpack", args);
+					return true;
+
+				}
+				else {
+					//TODO: show message saying: You can only carry one backpack at a time
+				}
+			}
+			else if (pNewItem->GetItemType() == EItemType::Gasmask) {
+
+				SUIArguments args;
+				for (int i = 0; i < GASMASK_CAPACITY; i++) {
+					if (!pGasmask[i]) {
+						//Adds all the arguments for flash
+						//Sets a slot to the gasmask
+						pGasmask[i] = pNewItem;
+						args.AddArgument<string>(pNewItem->GetItemName());
+						args.AddArgument<int>(pNewItem->GetEntityId());
+						args.AddArgument<int>(pNewItem->GetItemType());
+						args.AddArgument<float>(pNewItem->GetItemWeight());
+						//Calls the UI function
+						pUIInventory->CallFunction("AddGasmask", args);
+						//Sets the current gasmask
+						pCurrentGasmask = pNewItem;
+						return true;
+					}
+
+				}
+			}
+			//If it's not weapon, gasmask or backpack, just add it normally
+			else {
+				//Adds all of the arguments for flash
+				SUIArguments args;
+				args.AddArgument<string>(pNewItem->GetItemName());
+				args.AddArgument<int>(pNewItem->GetEntityId());
+				args.AddArgument<int>(pNewItem->GetItemType());
+				args.AddArgument<float>(pNewItem->GetItemWeight());
+				pUIInventory->CallFunction("AddItem", args);
+
+				return true;
+			}
+
+			return true;
+		}
+		//If there isn't enough carrying weight
+		else {
+			//TODO: Show message that you can't carry anymore here!
+		}
+
+	}
+	return false;
+
+}
+
+//Request the adding of the item
+bool CInventoryComponent::RequestAddItem(SItemComponent* pNewItem) {
+	
+	//If it is server, continue
+	if (gEnv->bServer) {
+		//Adds the item the old fashion way
+		AddItem(pNewItem);
+		return true;
+	}
+	//Else, continue
+	else {
+		//Gets the entity Id
+		EntityId Id = pNewItem->GetEntityId();
+		uint16 playerChannelId = m_pEntity->GetNetEntity()->GetChannelId();
+		//Calls the server function
+		ServerAddItemRMI::InvokeOnServer(this, SAddItemParams{ Id, playerChannelId });
+		return true;
+	}
+
+	return false;
 }
