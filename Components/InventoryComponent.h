@@ -84,6 +84,9 @@ public:
 	bool ServerRemoveItem(SRemoveItemParams&& p, INetChannel *pNetChannel);
 	bool ClientRemoveItem(SRemoveItemParams&& p, INetChannel *pNetChannel);
 	bool RequestRemoveItem(SItemComponent *pItemToRemove);
+
+	void DelegateAuthorityToClient(const EntityId controlledEntityId, const uint16 clientChannelId);
+	void DelegateAuthorityToServer(const EntityId controlledEntityId);
 	//Network
 
 protected:

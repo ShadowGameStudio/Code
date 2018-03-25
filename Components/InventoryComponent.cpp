@@ -583,7 +583,7 @@ void CInventoryComponent::Show() {
 //Called by RequestAddItem
 bool CInventoryComponent::ServerAddItem(SAddItemParams&& p, INetChannel* pNetChannel) {
 	//Invokes the function on the client picking the item up
-	ClientAddItemRMI::InvokeOnClient(this, SAddItemParams{ p.Id }, p.playerChannelId);
+	ClientAddItemRMI::InvokeOnClient(this, SAddItemParams{ p.Id, p.playerChannelId }, p.playerChannelId);
 
 	return true;
 }
@@ -606,6 +606,8 @@ bool CInventoryComponent::ClientAddItem(SAddItemParams&& p, INetChannel* pNetCha
 		float fCapOver = m_fInventoryCapKilo - m_fCurrentWeight;
 		//If there is carrying weight enough over continue
 		if (fCapOver > pNewItem->GetItemWeight()) {
+			//Gives the player the controll over the item
+			DelegateAuthorityToClient(p.Id, p.playerChannelId);
 			//If it is some sort of weapon(meele of non)
 			if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
 				//Set the arguments for the UI function call
@@ -735,6 +737,9 @@ bool CInventoryComponent::ClientRemoveItem(SRemoveItemParams && p, INetChannel *
 
 	if (!pNewItem)
 		return false;
+	
+	//Gives the server the controll over the entity
+	DelegateAuthorityToServer(p.Id);
 
 	if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
 
@@ -785,4 +790,22 @@ bool CInventoryComponent::RequestRemoveItem(SItemComponent * pItemToRemove) {
 	}
 
 	return false;
+}
+
+//Delegates authority from server to client or client to client
+void CInventoryComponent::DelegateAuthorityToClient(const EntityId controlledEntityId, const uint16 clientChannelId) {
+
+	//Gets the channel that the client is on
+	INetChannel* pNetChannel = gEnv->pGameFramework->GetNetChannel(clientChannelId);
+	//Delegates the authority
+	gEnv->pGameFramework->GetNetContext()->DelegateAuthority(controlledEntityId, pNetChannel);
+
+}
+
+//Delegates authority to server
+void CInventoryComponent::DelegateAuthorityToServer(const EntityId controlledEntityId) {
+
+	//Sets the chanel to nullptr
+	gEnv->pGameFramework->GetNetContext()->DelegateAuthority(controlledEntityId, nullptr);
+
 }

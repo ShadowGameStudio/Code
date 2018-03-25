@@ -12,8 +12,13 @@ Purpose : Handels all the weapon logic
 #include "ItemComponent.h"
 #include "CryNetwork\Rmi.h"
 
-struct NoParams {
-	void SerializeWith(TSerialize ser) {}
+struct SShootParams {
+
+	EntityId playerId;
+
+	void SerializeWith(TSerialize ser) {
+		ser.Value("EntityId", playerId, 'eid');
+	}
 };
 
 class CWeaponComponent : public SItemComponent {
@@ -88,17 +93,12 @@ public:
 
 	//Non-meele weapon specific
 	void Reload();
-	void SetPlayer(CPlayerComponent *pPlayer);
-	void Shoot(){ SRmi<RMI_WRAP(&CWeaponComponent::SvShoot)>::InvokeOnServer(this, NoParams{}); }
 
 	//Network
-	//Client
-	bool ClShoot(NoParams&& p, INetChannel *);
-	//Server
-	bool SvShoot(NoParams&& p, INetChannel *) { 
-		SRmi<RMI_WRAP(&CWeaponComponent::ClShoot)>::InvokeOnAllClients(this, NoParams{});
-		return true; 
-	}
+	bool ClientShoot(SShootParams&& p, INetChannel *pNetChannel);
+	bool ServerShoot(SShootParams&& p, INetChannel *pNetChannel);
+	bool RequestShot();
+	//Network
 
 	//Meele weapon specific
 	void StartAttack();

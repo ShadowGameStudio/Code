@@ -1,5 +1,9 @@
 #include "StdAfx.h"
 #include "WeaponComponent.h"
+#include <CryNetwork\Rmi.h>
+
+using ServerShootRMI = SRmi<RMI_WRAP(&CWeaponComponent::ServerShoot)>;
+using ClientShootRMI = SRmi<RMI_WRAP(&CWeaponComponent::ClientShoot)>;
 
 static void RegisterWeapon(Schematyc::IEnvRegistrar& registrar) {
 	Schematyc::CEnvRegistrationScope scope = registrar.Scope(IEntity::GetEntityScopeGUID());
@@ -14,8 +18,23 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterWeapon)
 
 void CWeaponComponent::InitializeClass() {
 
-	SRmi<RMI_WRAP(&CWeaponComponent::SvShoot)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
-	SRmi<RMI_WRAP(&CWeaponComponent::ClShoot)>::Register(this, eRAT_NoAttach, true, eNRT_ReliableOrdered);
+	//Shoot RMI(Server)
+	{
+		const bool bIsServer = true;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		ServerShootRMI::Register(this, attachmentType, bIsServer, reliability);
+	}
+
+	//Shoot RMI(Client)
+	{
+		const bool bIsServer = false;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		ClientShootRMI::Register(this, attachmentType, bIsServer, reliability);
+	}
 
 }
 
@@ -78,51 +97,6 @@ void CWeaponComponent::ReflectType(Schematyc::CTypeDesc<CWeaponComponent>& desc)
 
 }
 
-//Shoots weapon if it is non-meele
-bool CWeaponComponent::ClShoot(NoParams&& p, INetChannel *) {
-	//Check so that weapon acually isn't meele
-	if (!GetWeaponProperties()->bIsMeele) {
-		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>() ) {
-			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {
-
-				auto *pBarrelOutAttachment = pCharacter->GetIAttachmentManager()->GetInterfaceByName("barrel_out");
-
-				if (pBarrelOutAttachment != nullptr) {
-
-					QuatTS bulletOrigin = pBarrelOutAttachment->GetAttWorldAbsolute();
-					SEntitySpawnParams spawnParams;
-
-					spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
-					spawnParams.vPosition = bulletOrigin.t;
-					spawnParams.qRotation = bulletOrigin.q;
-					
-					const float bulletScale = 0.05f;
-					spawnParams.vScale = Vec3(bulletScale);
-
-					//Spawn the actual entity
-					if (IEntity *pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
-						
-						//Adds Bullet Component to Entity
-						pEntity->CreateComponentClass<CBulletComponent>();
-						if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
-							pBullet->SetPlayer(pPlayerShooting);
-
-						//Remove bullet from mag
-						iCurrAmmo -= 1;
-
-					}
-
-				}
-
-			}
-		}
-
-	}
-
-	return true;
-
-}
-
 //Reloads the current weapon
 void CWeaponComponent::Reload() {
 
@@ -146,11 +120,6 @@ void CWeaponComponent::Reload() {
 	}
 }
 
-//Sets the player for ClShoot
-void CWeaponComponent::SetPlayer(CPlayerComponent *pPlayer) {
-	pPlayerShooting = pPlayer;
-}
-
 //Starting meele attack
 void CWeaponComponent::StartAttack() {
 
@@ -165,4 +134,73 @@ void CWeaponComponent::StopAttack() {
 	bIsAttacking = false;
 	m_pEntity->KillTimer(Timer_Attack);
 
+}
+
+//////////////////Network//////////////////
+
+//Called by the server
+bool CWeaponComponent::ClientShoot(SShootParams && p, INetChannel * pNetChannel) {
+
+	//Check so that weapon acually isn't meele
+	if (!GetWeaponProperties()->bIsMeele) {
+		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>()) {
+			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {
+
+				auto *pBarrelOutAttachment = pCharacter->GetIAttachmentManager()->GetInterfaceByName("barrel_out");
+
+				if (pBarrelOutAttachment != nullptr) {
+
+					QuatTS bulletOrigin = pBarrelOutAttachment->GetAttWorldAbsolute();
+					SEntitySpawnParams spawnParams;
+
+					spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+					spawnParams.vPosition = bulletOrigin.t;
+					spawnParams.qRotation = bulletOrigin.q;
+
+					const float bulletScale = 0.05f;
+					spawnParams.vScale = Vec3(bulletScale);
+
+					//Spawn the actual entity
+					if (IEntity *pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
+
+						//Adds Bullet Component to Entity
+						pEntity->CreateComponentClass<CBulletComponent>();
+						if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
+							pBullet->SetPlayer(pPlayerShooting);
+
+						//Remove bullet from mag
+						iCurrAmmo -= 1;
+
+					}
+
+				}
+
+			}
+		}
+
+	}
+
+	return true;
+}
+
+//Called by RequestShot
+bool CWeaponComponent::ServerShoot(SShootParams && p, INetChannel * pNetChannel) {
+	//Shoots on all the clients
+	ClientShootRMI::InvokeOnAllClients(this, SShootParams{ p.playerId });
+
+	return true;
+}
+
+bool CWeaponComponent::RequestShot() {
+	if (gEnv->bServer) {
+
+	}
+	else {
+
+		EntityId playerId = 
+
+		ServerShootRMI::InvokeOnServer(this, SShootParams{});
+	}
+
+	return false;
 }

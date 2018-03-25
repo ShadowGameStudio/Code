@@ -32,6 +32,14 @@ using ClientPickupRMI = SRmi<RMI_WRAP(&SItemComponent::ClientPickup)>;
 		ClientPickupRMI::Register(this, attachmentType, bIsServerCall, reliability);
 	}
 
+	//Enables the item to have it's aspects delegated
+	m_pEntity->GetNetEntity()->EnableDelegatableAspect(GetNetSerializeAspectMask(), true);
+	//If it's server, continue
+	if (gEnv->bServer) {
+		//Binds the object to the network
+		gEnv->pNetContext->BindObject(GetEntityId(), 0, GetNetSerializeAspectMask(), true);
+	}
+	//Bind the entity to network
 	m_pEntity->GetNetEntity()->BindToNetwork();
 
 }
