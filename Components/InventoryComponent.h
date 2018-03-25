@@ -30,8 +30,18 @@ class CInventoryComponent : public IEntityComponent {
 
 		void SerializeWith(TSerialize ser) {
 			ser.Value("EntityId", Id, 'eid');
-			ser.Value("PlayerChannelId", playerChannelId, 'ui16');
+			ser.Value("playerChannelId", playerChannelId, 'ui16');
 		}
+	};
+
+	struct SRemoveItemParams {
+
+		EntityId Id;
+
+		void SerializeWith(TSerialize ser) {
+			ser.Value("EntityId", Id, 'eid');
+		}
+
 	};
 
 public:
@@ -39,6 +49,7 @@ public:
 	//CInventoryComponent::~CInventoryComponent();
 
 	virtual void Initialize() override;
+	virtual void LocalInitialize();
 	virtual uint64 GetEventMask() const override;
 	virtual void ProcessEvent(const SEntityEvent& event) override;
 
@@ -47,9 +58,7 @@ public:
 	int GetWeaponSlot(SItemComponent *pNewWeapon);
 
 	bool AddItem(SItemComponent *pNewItem);
-
 	void RemoveItem(SItemComponent *pNewItem);
-	void RemoveWeapon(SItemComponent *pNewItem);
 
 	void AttachToBack(SItemComponent *pItemToAttach, int slotId);
 	void DetachFromBack(int slotId);
@@ -60,13 +69,6 @@ public:
 	void DetachFromHand();
 
 	void SelectSlot(int slotId);
-	void RemoveWeapon(int slotId) { 
-		//Empty the slot
-		pWeapon[slotId] = nullptr;
-		//Set selected weapon to null
-		pSelectedWeapon = nullptr;
-		pLastSelectedWeapon = nullptr;
-	}
 	bool ActivateBackpack(SItemComponent *pBackpack);
 
 	SItemComponent *GetSelectedWeapon() { return pSelectedWeapon; }
@@ -78,6 +80,10 @@ public:
 	bool ServerAddItem(SAddItemParams&& p, INetChannel *pNetChannel);
 	bool ClientAddItem(SAddItemParams&& p, INetChannel *pNetChannel);
 	bool RequestAddItem(SItemComponent *pNewItem);
+
+	bool ServerRemoveItem(SRemoveItemParams&& p, INetChannel *pNetChannel);
+	bool ClientRemoveItem(SRemoveItemParams&& p, INetChannel *pNetChannel);
+	bool RequestRemoveItem(SItemComponent *pItemToRemove);
 	//Network
 
 protected:

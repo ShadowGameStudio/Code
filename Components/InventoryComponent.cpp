@@ -11,21 +11,12 @@
 using ServerAddItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ServerAddItem)>;
 using ClientAddItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ClientAddItem)>;
 
-void CInventoryComponent::Initialize() {
+using ServerRemoveItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ServerRemoveItem)>;
+using ClientRemoveItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ClientRemoveItem)>;
 
-	//Gets the different UI elements for the inventory
-	pUIInventory = gEnv->pFlashUI->GetUIElement("InventorySystem");
-	pInventoryShow = gEnv->pFlashUI->GetUIAction("inventoryshow");
-	pInventoryHide = gEnv->pFlashUI->GetUIAction("inventoryhide");
-	pInventoryShowCursor = gEnv->pFlashUI->GetUIAction("inventoryshowcursor");
-	pInventoryHideCursor = gEnv->pFlashUI->GetUIAction("inventoryhidecursor");
-	pShowCrosshair = gEnv->pFlashUI->GetUIAction("showcrosshair");
-	pManager = gEnv->pFlashUI->GetUIActionManager();
-	//Starts the initialization of the actual UI
-	pUIInventory->CallFunction("Initialize");
-	//Makes sure the UI is hidden on start
-	pManager->StartAction(pInventoryHide, "InventorySystem");
-	pManager->StartAction(pShowCrosshair, "Crosshair");
+//////////////////////Basic//////////////////////
+
+void CInventoryComponent::Initialize() {
 
 	//AddItem RMI(Server)
 	{
@@ -45,6 +36,42 @@ void CInventoryComponent::Initialize() {
 		ClientAddItemRMI::Register(this, attachmentType, bIsServerCall, reliability);
 	}
 
+	//RemoveItem RMI(Server)
+	{
+		const bool bIsServerCall = true;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		ServerRemoveItemRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	}
+
+	//RemoveItem RMI(Client)
+	{
+		const bool bIsServerCall = false;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_ReliableUnordered;
+	
+		ClientRemoveItemRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	}
+
+}
+
+void CInventoryComponent::LocalInitialize() {
+
+	//Gets the different UI elements for the inventory
+	pUIInventory = gEnv->pFlashUI->GetUIElement("InventorySystem");
+	pInventoryShow = gEnv->pFlashUI->GetUIAction("inventoryshow");
+	pInventoryHide = gEnv->pFlashUI->GetUIAction("inventoryhide");
+	pInventoryShowCursor = gEnv->pFlashUI->GetUIAction("inventoryshowcursor");
+	pInventoryHideCursor = gEnv->pFlashUI->GetUIAction("inventoryhidecursor");
+	pShowCrosshair = gEnv->pFlashUI->GetUIAction("showcrosshair");
+	pManager = gEnv->pFlashUI->GetUIActionManager();
+	//Starts the initialization of the actual UI
+	pUIInventory->CallFunction("Initialize");
+	//Makes sure the UI is hidden on start
+	pManager->StartAction(pInventoryHide, "InventorySystem");
+	pManager->StartAction(pShowCrosshair, "Crosshair");
+
 }
 
 uint64 CInventoryComponent::GetEventMask() const {
@@ -52,6 +79,8 @@ uint64 CInventoryComponent::GetEventMask() const {
 }
 
 void CInventoryComponent::ProcessEvent(const SEntityEvent& event) {}
+
+//////////////////////Functionality//////////////////////
 
 //Returns the slot that the passed in weapon is located in
 int CInventoryComponent::GetWeaponSlot(SItemComponent *pNewWeapon) {
@@ -176,25 +205,27 @@ void CInventoryComponent::RemoveItem(SItemComponent *pNewItem) {
 	if (!pNewItem)
 		return;
 
-	//Remove the item weight from the current weight carried
-	m_fCurrentWeight -= pNewItem->GetItemWeight();
+	if (pNewItem->GetItemType() == EItemType::MeeleWeapon ||EItemType::Weapon) {
 
-}
+		//Remove the weapon weight from the current weigth carried
+		m_fCurrentWeight -= pNewItem->GetItemWeight();
+		int index = GetWeaponSlot(pNewItem);
+		//Check so that the slot isn't -1(invalid)
+		if (index > -1) {
+			//Empty the slot
+			pWeapon[index] = nullptr;
+			//Set selected weapon to null
+			pSelectedWeapon = nullptr;
+			pLastSelectedWeapon = nullptr;
+			//Detach the weapon from the back when you remove it
+			DetachFromBack(index);
+		}
+	}
+	else {
 
-//Removes a weapon from the inventory
-void CInventoryComponent::RemoveWeapon(SItemComponent *pNewItem) {
+		//Remove the item weight from the current weight carried
+		m_fCurrentWeight -= pNewItem->GetItemWeight();
 
-	if (!pNewItem)
-		return;
-	
-	//Remove the weapon weight from the current weigth carried
-	m_fCurrentWeight -= pNewItem->GetItemWeight();
-	int index = GetWeaponSlot(pNewItem);
-	//Check so that the slot isn't -1(invalid)
-	if (index > -1) {
-		pWeapon[index] = nullptr;
-		//Detach the weapon from the back when you remove it
-		DetachFromBack(index);
 	}
 
 }
@@ -471,7 +502,7 @@ void CInventoryComponent::DeselectWeapon() {
 
 }
 
-//Inventory UI
+//////////////////////InventoryUI//////////////////////
 
 bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
 
@@ -547,10 +578,12 @@ void CInventoryComponent::Show() {
 
 }
 
+//////////////////////Network//////////////////////
+
 //Called by RequestAddItem
 bool CInventoryComponent::ServerAddItem(SAddItemParams&& p, INetChannel* pNetChannel) {
 	//Invokes the function on the client picking the item up
-	ClientAddItemRMI::InvokeOnClient(this, SAddItemParams{ p.Id, p.playerChannelId }, p.playerChannelId);
+	ClientAddItemRMI::InvokeOnClient(this, SAddItemParams{ p.Id }, p.playerChannelId);
 
 	return true;
 }
@@ -679,6 +712,76 @@ bool CInventoryComponent::RequestAddItem(SItemComponent* pNewItem) {
 		//Calls the server function
 		ServerAddItemRMI::InvokeOnServer(this, SAddItemParams{ Id, playerChannelId });
 		return true;
+	}
+
+	return false;
+}
+
+//Called by RequestRemoveItem
+bool CInventoryComponent::ServerRemoveItem(SRemoveItemParams && p, INetChannel * pNetChannel) {
+	//Removes the item from the client
+	ClientRemoveItemRMI::InvokeOnAllClients(this, SRemoveItemParams{ p.Id });
+
+	return true;
+}
+
+//Removes the item from the client
+bool CInventoryComponent::ClientRemoveItem(SRemoveItemParams && p, INetChannel * pNetChannel) {
+
+	//Get the entity from the entity Id
+	IEntity *pNewEntity = gEnv->pEntitySystem->GetEntity(p.Id);
+	//Get the ItemComponent of the entity
+	SItemComponent *pNewItem = pNewEntity->GetComponent<SItemComponent>();
+
+	if (!pNewItem)
+		return false;
+
+	if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
+
+		//Remove the weapon weight from the current weigth carried
+		m_fCurrentWeight -= pNewItem->GetItemWeight();
+		int index = GetWeaponSlot(pNewItem);
+		//Check so that the slot isn't -1(invalid)
+		if (index > -1) {
+			//Empty the slot
+			pWeapon[index] = nullptr;
+			//Set selected weapon to null
+			pSelectedWeapon = nullptr;
+			pLastSelectedWeapon = nullptr;
+			//Detach the weapon from the back when you remove it
+			DetachFromBack(index);
+			return true;
+		}
+		return false;
+	}
+	else {
+
+		//Remove the item weight from the current weight carried
+		m_fCurrentWeight -= pNewItem->GetItemWeight();
+		return true;
+	}
+
+	return false;
+}
+
+//Request the removing of an item
+bool CInventoryComponent::RequestRemoveItem(SItemComponent * pItemToRemove) {
+
+	//If it is the server, continue
+	if (gEnv->bServer) {
+
+		//Removes the item the old fashioned way
+		RemoveItem(pItemToRemove);
+
+	}
+	//If it's a client, continue
+	else {
+
+		//Gets the items entity Id
+		EntityId Id = pItemToRemove->GetEntityId();
+		//Sends the request to the server
+		ServerRemoveItemRMI::InvokeOnServer(this, SRemoveItemParams{ Id });
+
 	}
 
 	return false;

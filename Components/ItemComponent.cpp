@@ -109,10 +109,8 @@ using ClientPickupRMI = SRmi<RMI_WRAP(&SItemComponent::ClientPickup)>;
 		//Detach the weapon from players hand
 		pOwnerPlayer->GetInventory()->DetachFromHand();
 
-		//Get the weapon slot
-		int iWeaponSlot = pOwnerPlayer->GetInventory()->GetWeaponSlot(pWeaponToDrop);
-		//Erase the weapon from the index
-		pOwnerPlayer->GetInventory()->RemoveWeapon(iWeaponSlot);
+		//Remove the weapon from the inventory
+		pOwnerPlayer->GetInventory()->RemoveItem(pWeaponToDrop);
 	}
 	
 	 
@@ -148,6 +146,7 @@ using ClientPickupRMI = SRmi<RMI_WRAP(&SItemComponent::ClientPickup)>;
 
  bool SItemComponent::ClientPickup(SPickUpParams && p, INetChannel * pNetChannel) {
 
+	 //Gets the entity from the entity id
 	 IEntity *pNewOwner = gEnv->pEntitySystem->GetEntity(p.Id);
 
 	 if (!pNewOwner)

@@ -29,6 +29,7 @@ void CPlayerComponent::Initialize()
 	// Get the input component, wraps access to action mapping so we can easily get callbacks when inputs are triggered
 	m_pInputComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CInputComponent>();
 	m_pHealthComponent = m_pEntity->GetOrCreateComponentClass<CHealthComponent>();
+	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
 
 	//Sets health, stamina and such
 	SetPlayerParams();
@@ -72,7 +73,7 @@ void CPlayerComponent::LocalPlayerInitialize() {
 
 	//Init local player components
 	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
-	m_pInventoryComponent = m_pEntity->GetOrCreateComponentClass<CInventoryComponent>();
+	m_pInventoryComponent->LocalInitialize();
 	//Initializes all the different inputs
 	InitializeInput();
 	//Set camera clipping
