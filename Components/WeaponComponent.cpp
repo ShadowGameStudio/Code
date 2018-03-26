@@ -120,6 +120,49 @@ void CWeaponComponent::Reload() {
 	}
 }
 
+//Shoots the weapon
+void CWeaponComponent::Shoot() {
+
+	if (!GetWeaponProperties()->bIsMeele) {
+		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>()) {
+			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {
+
+				auto *pBarrelOutAttachment = pCharacter->GetIAttachmentManager()->GetInterfaceByName("barrel_out");
+
+				if (pBarrelOutAttachment != nullptr) {
+
+					QuatTS bulletOrigin = pBarrelOutAttachment->GetAttWorldAbsolute();
+					SEntitySpawnParams spawnParams;
+
+					spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
+					spawnParams.vPosition = bulletOrigin.t;
+					spawnParams.qRotation = bulletOrigin.q;
+
+					const float bulletScale = 0.05f;
+					spawnParams.vScale = Vec3(bulletScale);
+
+					//Spawn the actual entity
+					if (IEntity *pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
+
+						//Adds Bullet Component to Entity
+						pEntity->CreateComponentClass<CBulletComponent>();
+						if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
+							pBullet->SetPlayer(pPlayerShooting);
+
+						//Remove bullet from mag
+						iCurrAmmo -= 1;
+
+					}
+
+				}
+
+			}
+		}
+
+	}
+
+}
+
 //Starting meele attack
 void CWeaponComponent::StartAttack() {
 
@@ -191,15 +234,16 @@ bool CWeaponComponent::ServerShoot(SShootParams && p, INetChannel * pNetChannel)
 	return true;
 }
 
-bool CWeaponComponent::RequestShot() {
+//Called when player presses fire button
+bool CWeaponComponent::RequestShot(EntityId playerId) {
 	if (gEnv->bServer) {
+
+
 
 	}
 	else {
-
-		EntityId playerId = 
-
-		ServerShootRMI::InvokeOnServer(this, SShootParams{});
+		//Sends request to server
+		ServerShootRMI::InvokeOnServer(this, SShootParams{ playerId });
 	}
 
 	return false;

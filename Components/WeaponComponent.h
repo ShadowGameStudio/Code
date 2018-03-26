@@ -93,11 +93,12 @@ public:
 
 	//Non-meele weapon specific
 	void Reload();
+	void Shoot();
 
 	//Network
 	bool ClientShoot(SShootParams&& p, INetChannel *pNetChannel);
 	bool ServerShoot(SShootParams&& p, INetChannel *pNetChannel);
-	bool RequestShot();
+	bool RequestShot(EntityId playerId);
 	//Network
 
 	//Meele weapon specific

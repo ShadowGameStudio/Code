@@ -708,6 +708,9 @@ bool CInventoryComponent::RequestAddItem(SItemComponent* pNewItem) {
 	}
 	//Else, continue
 	else {
+
+		//TODO: Try delegation here
+
 		//Gets the entity Id
 		EntityId Id = pNewItem->GetEntityId();
 		uint16 playerChannelId = m_pEntity->GetNetEntity()->GetChannelId();

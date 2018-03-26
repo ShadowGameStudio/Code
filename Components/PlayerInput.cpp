@@ -312,15 +312,12 @@ void CPlayerComponent::Action_Attack(int activationMode) {
 			//Else if weapon is non-meele
 			else {
 
-				CPlayerComponent *pPlayer = m_pEntity->GetComponent<CPlayerComponent>();
-
 				//If firemode is automatic
 				if (pSelectedWeapon->GetFiremodeProperties()->bIsAuto) {
 					while (activationMode == eIS_Down) {
 						//If weapon has ammo, shoot
 						if (pSelectedWeapon->GetCurrAmmo() >= 1) {
-							pSelectedWeapon->SetPlayer(pPlayer);
-							pSelectedWeapon->Shoot();
+							pSelectedWeapon->RequestShot(m_pEntity->GetId());
 						}
 						//else reload
 						else {
@@ -332,8 +329,7 @@ void CPlayerComponent::Action_Attack(int activationMode) {
 				else if (pSelectedWeapon->GetFiremodeProperties()->bIsSemi || pSelectedWeapon->GetFiremodeProperties()->bIsSingle) {
 					if (activationMode == eIS_Pressed) {
 						if (pSelectedWeapon->GetCurrAmmo() >= 1) {
-							pSelectedWeapon->SetPlayer(pPlayer);
-							pSelectedWeapon->Shoot();
+							pSelectedWeapon->RequestShot(m_pEntity->GetId());
 						}
 						else {
 							pSelectedWeapon->Reload();
