@@ -6,8 +6,6 @@
 #include "ItemProperties.h"
 #include <CryNetwork\Rmi.h>
 
-#include <Steam\SteamUser.h>
-
 using ServerAddItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ServerAddItem)>;
 using ClientAddItemRMI = SRmi<RMI_WRAP(&CInventoryComponent::ClientAddItem)>;
 
@@ -543,8 +541,6 @@ bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
 
 //Shows/Hides the inventory
 void CInventoryComponent::Show() {
-
-	using namespace Cry::GamePlatform::Steam;
 
 	//CUser *pUser;
 
