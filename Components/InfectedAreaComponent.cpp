@@ -96,18 +96,18 @@ void CInfectedAreaComponent::ReflectType(Schematyc::CTypeDesc<CInfectedAreaCompo
 }
 
 //Called when a player is leaving an infected area
-void CInfectedAreaComponent::Entering(EntityId Id) {
+void CInfectedAreaComponent::Entering(Schematyc::ExplicitEntityId Id) {
 	//Set that there is a player inside
 	bIsInside = true;
 	//Increment the player count inside the area
 	iPlayerCount++;
 	//Calls the function that adds the player to the area and such
-	PlayerEntered(Id);
+	PlayerEntered((EntityId)Id);
 
 }
 
 //Called when a player is leaving an infected area
-void CInfectedAreaComponent::Leaving(EntityId Id) {
+void CInfectedAreaComponent::Leaving(Schematyc::ExplicitEntityId Id) {
 
 	//If the player count is equal to zero it will turn the bIsInsibe boll false
 	if (iPlayerCount == 0)
@@ -118,7 +118,7 @@ void CInfectedAreaComponent::Leaving(EntityId Id) {
 		iPlayerCount--;
 
 	//If it can get the players entity, continue
-	if (IEntity *pPlayer = gEnv->pEntitySystem->GetEntity(Id)) {
+	if (IEntity *pPlayer = gEnv->pEntitySystem->GetEntity((EntityId)Id)) {
 		//Find the player in the vector
 		auto player = std::find(pPlayerCount.begin(), pPlayerCount.end(), pPlayer);
 		//Set the distance to it to an index int

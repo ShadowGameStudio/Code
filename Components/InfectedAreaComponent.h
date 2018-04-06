@@ -49,8 +49,8 @@ public:
 	SInfectedAreaProperties *GetInfectedProperties() { return &sInfectedAreaProperties; }
 
 	//Functions
-	void Entering(EntityId Id);
-	void Leaving(EntityId Id);
+	void Entering(Schematyc::ExplicitEntityId Id);
+	void Leaving(Schematyc::ExplicitEntityId Id);
 
 	int EntToInt(EntityId Id) {
 		int iId = Id;
