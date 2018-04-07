@@ -74,7 +74,7 @@ void CGamePlugin::OnSystemEvent(ESystemEvent event, UINT_PTR wparam, UINT_PTR lp
 		// Don't need to load the map in editor
 		if (!gEnv->IsEditor())
 		{
-			gEnv->pConsole->ExecuteString("map example", false, true);
+			gEnv->pConsole->ExecuteString("map example_2", false, true);
 		}
 
 	}

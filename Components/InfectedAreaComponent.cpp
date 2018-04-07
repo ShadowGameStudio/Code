@@ -46,31 +46,37 @@ void CInfectedAreaComponent::ProcessEvent(const SEntityEvent & event) {
 			//When the timer has run out, continue
 			if (event.nParam[0] == Timer_Damage) {
 				//For as many players there is in the area
-				for (int i = 0; i < iPlayerCount; i++) {
+				for (int i = 1; i < iPlayerCount; i++) {
 
-					IEntity *pPlayer = pPlayerCount[i];
-					//If damage mode is zero, return
-					if (iDamageMode == 0) {
-						return;
-					}
-					//Else if it's 1, continue
-					else if (iDamageMode == 1) {
-						//Gets the players health component
-						CHealthComponent *pHealth = pPlayer->GetComponent<CHealthComponent>();
-						//Remove health from the player
-						pHealth->Add((-GetInfectedProperties()->fDamage));
-					}
-					//Else if it's 2, continue
-					else if (iDamageMode == 2) {
-						//Gets the players health component
-						CHealthComponent *pHealth = pPlayer->GetComponent<CHealthComponent>();
-						//Remove health from the player
-						pHealth->Add((-GetInfectedProperties()->fWithMaskDamage));
+					if (pPlayerCount[i]) {
+
+						IEntity *pPlayer = pPlayerCount[i];
+						//If damage mode is zero, return
+						if (iDamageMode == eDM_NoDamage) {
+							return;
+						}
+						//Else if it's 1, continue
+						else if (iDamageMode == eDM_LowDamage) {
+							//Gets the players health component
+							CHealthComponent *pHealth = pPlayer->GetComponent<CHealthComponent>();
+							//Remove health from the player
+							pHealth->Add((-GetInfectedProperties()->fDamage));
+						}
+						//Else if it's 2, continue
+						else if (iDamageMode == eDM_HighDamage) {
+							//Gets the players health component
+							CHealthComponent *pHealth = pPlayer->GetComponent<CHealthComponent>();
+							//Remove health from the player
+							pHealth->Add((-GetInfectedProperties()->fWithMaskDamage));
+							string test = ToString(pHealth->Get());
+							CryLogAlways(test);
+						}
 					}
 
 				}
-
+				bTimerSet = false;
 			}
+
 		}
 		break;
 
@@ -155,14 +161,14 @@ void CInfectedAreaComponent::PlayerEntered(EntityId Id) {
 							//Turns of the players ability to take damage
 							pPlayerComponent->bCanTakeInfectedDamage = false;
 							//Set the damage mode to zero
-							iDamageMode = 0;
+							iDamageMode = eDM_NoDamage;
 						}
 						//If it's not, continue
 						else {
 							//Turns of the players ability to take damage
 							pPlayerComponent->bCanTakeInfectedDamage = true;
 							//Set the damage to low
-							iDamageMode = 1;
+							iDamageMode = eDM_LowDamage;
 						}
 
 					}
@@ -173,7 +179,7 @@ void CInfectedAreaComponent::PlayerEntered(EntityId Id) {
 					//Turns of the players ability to take damage
 					pPlayerComponent->bCanTakeInfectedDamage = true;
 					//Set the damage mode to high
-					iDamageMode = 2;
+					iDamageMode = eDM_HighDamage;
 				}
 
 			}
@@ -188,8 +194,11 @@ void CInfectedAreaComponent::PlayerEntered(EntityId Id) {
 void CInfectedAreaComponent::Update(float fFrameTime) {
 
 	//Start the damage timer
-	if(bIsInside)
+	if (bIsInside && bTimerSet == false) {
+
 		m_pEntity->SetTimer(Timer_Damage, 500);
+		bTimerSet = true;
+	}
 
 }
 

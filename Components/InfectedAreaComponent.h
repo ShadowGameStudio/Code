@@ -16,6 +16,14 @@ class CInfectedAreaComponent final : public IEntityComponent {
 		Timer_Damage
 	};
 
+	enum EDamageMode {
+
+		eDM_NoDamage,
+		eDM_LowDamage,
+		eDM_HighDamage
+
+	};
+
 	struct SInfectedAreaProperties {
 
 		inline bool operator==(const SInfectedAreaProperties& rhs) const { return 0 == memcmp(this, &rhs, sizeof(rhs)); }
@@ -52,11 +60,6 @@ public:
 	void Entering(Schematyc::ExplicitEntityId Id);
 	void Leaving(Schematyc::ExplicitEntityId Id);
 
-	int EntToInt(EntityId Id) {
-		int iId = Id;
-		return iId;
-	}
-
 	void PlayerEntered(EntityId Id);
 
 	void Update(float fFrameTime);
@@ -66,8 +69,9 @@ protected:
 	//Vars
 	bool bIsInside = false;
 	bool bIsDamaging = false;
+	bool bTimerSet = false;
 	int iPlayerCount = 0;
-	int iDamageMode = 0; //0 is no damage, 1 is light damage(with mask), 2 is high damage
+	int iDamageMode = 0;
 
 	SInfectedAreaProperties sInfectedAreaProperties;
 	std::vector<IEntity*> pPlayerCount = { nullptr };

@@ -52,4 +52,19 @@ void CHealthComponent::Update(float frameTime) {
 		Regenerate();
 	}
 
+	if (Get() <= 0) {
+
+		//Sets the health to zero
+		Set(0);
+
+		//If it can get the playercomponent, continue
+		if (CPlayerComponent *pPlayer = m_pEntity->GetComponent<CPlayerComponent>()) {
+
+			//Revives the player
+			pPlayer->Revive();
+
+		}
+
+	}
+
 }

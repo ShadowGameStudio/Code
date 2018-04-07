@@ -10,6 +10,7 @@
 #include "CryNetwork\Rmi.h"
 #include "ItemComponent.h"
 #include "InventoryComponent.h"
+#include "UIComponent.h"
 
 static void RegisterPlayer(Schematyc::IEnvRegistrar& registrar) {
 	Schematyc::CEnvRegistrationScope scope = registrar.Scope(IEntity::GetEntityScopeGUID());
@@ -73,6 +74,7 @@ void CPlayerComponent::LocalPlayerInitialize() {
 
 	//Init local player components
 	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
+	m_pUIComponent = m_pEntity->GetOrCreateComponentClass<CUIComponent>();
 	m_pInventoryComponent->LocalInitialize();
 	//Initializes all the different inputs
 	InitializeInput();

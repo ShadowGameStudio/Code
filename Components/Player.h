@@ -15,6 +15,7 @@
 #include "InventoryComponent.h"
 #include "HealthpackComponent.h"
 #include "HealthComponent.h"
+#include "UIComponent.h"
 
 ////////////////////////////////////////////////////////
 // Represents a player participating in gameplay
@@ -172,6 +173,7 @@ protected:
 	Cry::DefaultComponents::CInputComponent* m_pInputComponent = nullptr;
 	CInventoryComponent *m_pInventoryComponent = nullptr;
 	CHealthComponent *m_pHealthComponent = nullptr;
+	CUIComponent *m_pUIComponent = nullptr;
 
 	FragmentID m_idleFragmentId;
 	FragmentID m_walkFragmentId;
