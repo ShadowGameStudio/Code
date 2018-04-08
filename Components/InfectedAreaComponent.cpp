@@ -46,11 +46,11 @@ void CInfectedAreaComponent::ProcessEvent(const SEntityEvent & event) {
 			//When the timer has run out, continue
 			if (event.nParam[0] == Timer_Damage) {
 				//For as many players there is in the area
-				for (int i = 1; i < iPlayerCount; i++) {
+				//for (int i = 1; i < iPlayerCount; i++) {
+				//TODO: Fix for loop
+					if (pPlayerCount[1]) {
 
-					if (pPlayerCount[i]) {
-
-						IEntity *pPlayer = pPlayerCount[i];
+						IEntity *pPlayer = pPlayerCount[1];
 						//If damage mode is zero, return
 						if (iDamageMode == eDM_NoDamage) {
 							return;
@@ -71,7 +71,7 @@ void CInfectedAreaComponent::ProcessEvent(const SEntityEvent & event) {
 							string test = ToString(pHealth->Get());
 							CryLogAlways(test);
 						}
-					}
+				//	}
 
 				}
 				bTimerSet = false;

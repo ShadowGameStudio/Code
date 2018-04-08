@@ -52,6 +52,7 @@ public:
 	virtual void LocalInitialize();
 	virtual uint64 GetEventMask() const override;
 	virtual void ProcessEvent(const SEntityEvent& event) override;
+	static void ReflectType(Schematyc::CTypeDesc<CInventoryComponent>& desc);
 
 	//Inventory System
 

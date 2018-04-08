@@ -22,6 +22,7 @@ public:
 
 	void SetHealthbar();
 	void UpdateAmmo();
+	void UpdateAlive(int alive);
 
 private:
 

@@ -9,6 +9,7 @@ Purpose : Vital Status is base class for various vital properties for living ent
 #pragma once
 
 #include <CryEntitySystem/IEntityComponent.h>
+#include "UIComponent.h"
 
 struct SVitalStatusComponent : public IEntityComponent {
 
@@ -46,10 +47,21 @@ struct SVitalStatusComponent : public IEntityComponent {
 
 	//Vitalsystem
 	void Regenerate();
-	void Add(float amount) { props.fValue += amount; }
-	void Remove(float amount) { props.fValue -= amount; }
+	void Add(float amount) 
+	{ 
+		props.fValue += amount;
+		if (auto *pUI = m_pEntity->GetComponent<CUIComponent>()) {
+			pUI->SetHealthbar();
+		}
+	}
 
-	void Set(float amount) { props.fValue = amount; }
+	void Set(float amount) 
+	{ 
+		props.fValue = amount; 
+		if (auto *pUI = m_pEntity->GetComponent<CUIComponent>()) {
+			pUI->SetHealthbar();
+		}
+	}
 	void SetMax(float amount) { props.fMax = amount; }
 	void SetRegenerationRatio(float reg) { props.fRegenerationRatio = reg; }
 

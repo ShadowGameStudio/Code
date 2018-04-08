@@ -78,6 +78,12 @@ uint64 CInventoryComponent::GetEventMask() const {
 
 void CInventoryComponent::ProcessEvent(const SEntityEvent& event) {}
 
+void CInventoryComponent::ReflectType(Schematyc::CTypeDesc<CInventoryComponent>& desc) {
+
+	desc.SetGUID("{D13511A8-1D12-4238-BD68-8FF53E74C539}"_cry_guid);
+
+}
+
 //////////////////////Functionality//////////////////////
 
 //Returns the slot that the passed in weapon is located in
@@ -465,6 +471,14 @@ void CInventoryComponent::SelectSlot(int slotId) {
 	if (pLastSelectedWeapon != pWeapon[slotId])
 		//Select the weapon in the specified slot
 		SelectWeapon(pWeapon[slotId]);
+
+	//Gets the players MainUI
+	if (auto *pUI = m_pEntity->GetComponent<CUIComponent>()) {
+
+		//Updates the text
+		pUI->UpdateAmmo();
+
+	}
 
 }
 

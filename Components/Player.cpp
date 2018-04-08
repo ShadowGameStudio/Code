@@ -74,12 +74,13 @@ void CPlayerComponent::LocalPlayerInitialize() {
 
 	//Init local player components
 	m_pCameraComponent = m_pEntity->GetOrCreateComponent<Cry::DefaultComponents::CCameraComponent>();
-	m_pUIComponent = m_pEntity->GetOrCreateComponentClass<CUIComponent>();
 	m_pInventoryComponent->LocalInitialize();
+	m_pUIComponent = m_pEntity->GetOrCreateComponentClass<CUIComponent>();
 	//Initializes all the different inputs
 	InitializeInput();
 	//Set camera clipping
 	m_pCameraComponent->SetNearPlane(0.1f);
+
 }
 
 uint64 CPlayerComponent::GetEventMask() const

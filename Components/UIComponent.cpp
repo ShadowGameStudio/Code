@@ -13,6 +13,14 @@ void CUIComponent::Initialize() {
 	//Makes sure that the UI is showing at start
 	pManager->StartAction(pShowMainUI, "MainUI");
 
+	//Show
+	{
+		SUIArguments args;
+		args.AddArgument<bool>(true);
+
+		pMainUI->CallFunction("Show");
+	}
+
 	//Set health text
 	SetHealthbar();
 
@@ -44,7 +52,7 @@ void CUIComponent::SetHealthbar() {
 		args.AddArgument<int>((int)pHealth->Get());
 	
 		//Sets the health
-		pMainUI->CallFunction("SetHealth");
+		pMainUI->CallFunction("SetHealth", args);
 
 	}
 
@@ -70,7 +78,7 @@ void CUIComponent::UpdateAmmo() {
 				args.AddArgument<string>(ammoString);
 
 				//Calls the flash function
-				pMainUI->CallFunction("UpdateAmmoText");
+				pMainUI->CallFunction("UpdateAmmoText", args);
 
 			}
 			else {
@@ -82,12 +90,35 @@ void CUIComponent::UpdateAmmo() {
 				args.AddArgument<string>(ammoString);
 
 				//Calls the flash function
-				pMainUI->CallFunction("UpdateAmmoText");
+				pMainUI->CallFunction("UpdateAmmoText", args);
 
 			}
+		}
+		else {
+
+			//Creates a string shown when no weapon is selected
+			string ammoString = "0/0";
+
+			SUIArguments args;
+			args.AddArgument<string>(ammoString);
+
+			//Calls the flash function
+			pMainUI->CallFunction("UpdateAmmoText", args);
 
 		}
 
 	}
+
+}
+
+void CUIComponent::UpdateAlive(int alive) {
+
+	SUIArguments args;
+
+	string sAlive = ToString(alive);
+
+	args.AddArgument<string>(sAlive);
+
+	pMainUI->CallFunction("UpdateAliveText", args);
 
 }

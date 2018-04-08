@@ -61,7 +61,7 @@ void CHealthComponent::Update(float frameTime) {
 		if (CPlayerComponent *pPlayer = m_pEntity->GetComponent<CPlayerComponent>()) {
 
 			//Revives the player
-			pPlayer->Revive();
+			//pPlayer->Revive();
 
 		}
 

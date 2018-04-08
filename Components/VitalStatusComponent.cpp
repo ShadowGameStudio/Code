@@ -36,9 +36,17 @@ void SVitalStatusComponent::Regenerate() {
 
 		bRegenerate = props.fValue == props.fLastValue;
 		props.fLastValue = props.fValue;
+		
+		if (auto *pUI = m_pEntity->GetComponent<CUIComponent>()) {
+			pUI->SetHealthbar();
+		}
 
-		if (props.fValue < props.fMax)
+		if (props.fValue < props.fMax) {
 			props.fValue += props.fRegenerationRatio;
+			if (auto *pUI =  m_pEntity->GetComponent<CUIComponent>()) {
+				pUI->SetHealthbar();
+			}
+		}
 
 	}
 
