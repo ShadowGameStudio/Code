@@ -57,6 +57,7 @@ public:
 	//Inventory System
 
 	int GetWeaponSlot(SItemComponent *pNewWeapon);
+	int GetItemVectorPosition(SItemComponent *pItem);
 
 	bool AddItem(SItemComponent *pNewItem);
 	void RemoveItem(SItemComponent *pNewItem);
@@ -71,6 +72,7 @@ public:
 
 	void SelectSlot(int slotId);
 	bool ActivateBackpack(SItemComponent *pBackpack);
+	bool RemoveBackpack(SItemComponent *pBackpack);
 
 	SItemComponent *GetSelectedWeapon() { return pSelectedWeapon; }
 	SItemComponent *GetGasmask() { return pCurrentGasmask; }
@@ -103,6 +105,7 @@ private:
 	SItemComponent *pWeapon[WEAPON_CAPACITY] = { nullptr };
 	SItemComponent *pGasmask[GASMASK_CAPACITY] = { nullptr };
 	SItemComponent *pBackpack = nullptr;
+	std::vector<SItemComponent*> pItems = {};
 
 	//UI Stuff
 

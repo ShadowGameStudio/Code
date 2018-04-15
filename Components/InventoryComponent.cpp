@@ -62,13 +62,22 @@ void CInventoryComponent::LocalInitialize() {
 	pInventoryHide = gEnv->pFlashUI->GetUIAction("inventoryhide");
 	pInventoryShowCursor = gEnv->pFlashUI->GetUIAction("inventoryshowcursor");
 	pInventoryHideCursor = gEnv->pFlashUI->GetUIAction("inventoryhidecursor");
-	pShowCrosshair = gEnv->pFlashUI->GetUIAction("showcrosshair");
 	pManager = gEnv->pFlashUI->GetUIActionManager();
+
+	//Set item count text at start
+	{
+		string sItemCount = ToString(pItems.size());
+
+		SUIArguments args;
+		args.AddArgument<string>(sItemCount);
+
+		pUIInventory->CallFunction("SetItemCount", args);
+	}
+
 	//Starts the initialization of the actual UI
 	pUIInventory->CallFunction("Initialize");
 	//Makes sure the UI is hidden on start
 	pManager->StartAction(pInventoryHide, "InventorySystem");
-	pManager->StartAction(pShowCrosshair, "Crosshair");
 
 }
 
@@ -100,6 +109,26 @@ int CInventoryComponent::GetWeaponSlot(SItemComponent *pNewWeapon) {
 	}
 
 	return -1;
+}
+
+//Get the position of an item in the pItem vector
+int CInventoryComponent::GetItemVectorPosition(SItemComponent *pItem) {
+
+	//Get the item in the vector
+	auto it = std::find(pItems.begin(), pItems.end(), pItem);
+
+	//If it doesn't come to the end, continue
+	if (it != pItems.begin()) {
+
+		//Get the index of the item
+		auto index = std::distance(pItems.begin(), it);
+
+		//Return the index(casted to int)
+		return (int)index;
+
+	}
+
+	return 0;
 }
 
 //Adds an item to the inventory
@@ -181,6 +210,10 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 			}
 			//If it's not weapon, gasmask or backpack, just add it normally
 			else {
+
+				//Adds the item to the vector
+				pItems.push_back(pNewItem);
+
 				//Adds all of the arguments for flash
 				SUIArguments args;
 				args.AddArgument<string>(pNewItem->GetItemName());
@@ -209,7 +242,7 @@ void CInventoryComponent::RemoveItem(SItemComponent *pNewItem) {
 	if (!pNewItem)
 		return;
 
-	if (pNewItem->GetItemType() == EItemType::MeeleWeapon ||EItemType::Weapon) {
+	if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
 
 		//Remove the weapon weight from the current weigth carried
 		m_fCurrentWeight -= pNewItem->GetItemWeight();
@@ -225,11 +258,37 @@ void CInventoryComponent::RemoveItem(SItemComponent *pNewItem) {
 			DetachFromBack(index);
 		}
 	}
-	else {
+	else if (pNewItem->GetItemType() == EItemType::Normal){
 
 		//Remove the item weight from the current weight carried
 		m_fCurrentWeight -= pNewItem->GetItemWeight();
 
+		//Removes the item from the vector
+		pItems.erase((pItems.begin() + (GetItemVectorPosition(pNewItem) - 1)));
+
+	}
+	else if (pNewItem->GetItemType() == EItemType::Backpack) {
+
+		//Remove the items weight
+		m_fCurrentWeight -= pNewItem->GetItemWeight();
+
+		//Remove the gasmask from the array
+		pGasmask[0] = nullptr;
+
+	}
+	else if (pNewItem->GetItemType() == EItemType::WeaponEquipment) {
+
+		//Remove the items weight
+		m_fCurrentWeight -= pNewItem->GetItemWeight();
+
+		//Removes the item from the vector
+		pItems.erase((pItems.begin() + (GetItemVectorPosition(pNewItem) - 1)));
+
+	}
+	else {
+
+		//Remove the items weight
+		m_fCurrentWeight -= pNewItem->GetItemWeight();
 	}
 
 }
@@ -337,6 +396,13 @@ void CInventoryComponent::Attach(SItemComponent *pItemToAttach) {
 				pItemToAttach->GetEntity()->DetachThis();
 				//Attach it to the face
 				AttachToFace(pItemToAttach);
+
+				//If it can get the MainUI, continue
+				if (auto *pUI = m_pEntity->GetComponent<CUIComponent>()) {
+					//Update the gasmask level
+					pUI->UpdateGasmaskLevel();
+
+				}
 			}
 
 		}
@@ -553,6 +619,39 @@ bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
 
 }
 
+bool CInventoryComponent::RemoveBackpack(SItemComponent *pBackpack) {
+	
+	//If the item actually is a backpack, continue
+	if (pBackpack->GetItemType() == EItemType::Backpack) {
+
+		//If the backpacks level is one, continue
+		if (pBackpack->GetItemLevel() == 1) {
+			//Remove 25 from the max weight
+			m_fInventoryCapKilo -= 25;
+			return true;
+
+		}
+		else if (pBackpack->GetItemLevel() == 2) {
+			//Remove 50 from the max weight
+			m_fInventoryCapKilo -= 50;
+			return true;
+
+		}
+		else if (pBackpack->GetItemLevel() == 3) {
+			//Remove 75 from the max weight
+			m_fInventoryCapKilo -= 50;
+			return true;
+
+		}
+		else {
+			return false;
+		}
+
+	}
+
+	return false;
+}
+
 //Shows/Hides the inventory
 void CInventoryComponent::Show() {
 
@@ -610,105 +709,15 @@ bool CInventoryComponent::ClientAddItem(SAddItemParams&& p, INetChannel* pNetCha
 	if (!pNewItem)
 		return false;
 
-	//If you have carry weight left continue
-	if (m_fCurrentWeight < m_fInventoryCapKilo) {
+	//Calls the add item function
+	AddItem(pNewItem);
 
-		float fCapOver = m_fInventoryCapKilo - m_fCurrentWeight;
-		//If there is carrying weight enough over continue
-		if (fCapOver > pNewItem->GetItemWeight()) {
-			//Gives the player the controll over the item
-			DelegateAuthorityToClient(p.Id, p.playerChannelId);
-			//If it is some sort of weapon(meele of non)
-			if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
-				//Set the arguments for the UI function call
-				SUIArguments args;
-				for (int i = 0; i < WEAPON_CAPACITY; i++) {
-					//If there is no weapon in the slot, continue
-					if (!pWeapon[i]) {
-						//Sets a slot to the weapon
-						pWeapon[i] = pNewItem;
-						args.AddArgument<int>(i);
-						args.AddArgument<string>(pNewItem->GetItemName());
-						args.AddArgument<int>(pNewItem->GetEntityId());
-						args.AddArgument<int>(pNewItem->GetItemType());
-						args.AddArgument<float>(pNewItem->GetItemWeight());
-						//Calls the UI function
-						pUIInventory->CallFunction("AddWeapon", args);
-						return true;
-
-					}
-
-				}
-			}
-			//If it is a backpack do this
-			else if (pNewItem->GetItemType() == EItemType::Backpack) {
-
-				SUIArguments args;
-				if (!pBackpack) {
-					//Adds all the arguments for flash
-					//Assigns the backpack
-					pBackpack = pNewItem;
-					args.AddArgument<string>(pNewItem->GetItemName());
-					args.AddArgument<int>(pNewItem->GetEntityId());
-					args.AddArgument<int>(pNewItem->GetItemType());
-					args.AddArgument<float>(pNewItem->GetItemWeight());
-					//Calls the UI function
-					pUIInventory->CallFunction("AddBackpack", args);
-					return true;
-
-				}
-				else {
-					//TODO: show message saying: You can only carry one backpack at a time
-				}
-			}
-			else if (pNewItem->GetItemType() == EItemType::Gasmask) {
-
-				SUIArguments args;
-				for (int i = 0; i < GASMASK_CAPACITY; i++) {
-					if (!pGasmask[i]) {
-						//Adds all the arguments for flash
-						//Sets a slot to the gasmask
-						pGasmask[i] = pNewItem;
-						args.AddArgument<string>(pNewItem->GetItemName());
-						args.AddArgument<int>(pNewItem->GetEntityId());
-						args.AddArgument<int>(pNewItem->GetItemType());
-						args.AddArgument<float>(pNewItem->GetItemWeight());
-						//Calls the UI function
-						pUIInventory->CallFunction("AddGasmask", args);
-						//Sets the current gasmask
-						pCurrentGasmask = pNewItem;
-						return true;
-					}
-
-				}
-			}
-			//If it's not weapon, gasmask or backpack, just add it normally
-			else {
-				//Adds all of the arguments for flash
-				SUIArguments args;
-				args.AddArgument<string>(pNewItem->GetItemName());
-				args.AddArgument<int>(pNewItem->GetEntityId());
-				args.AddArgument<int>(pNewItem->GetItemType());
-				args.AddArgument<float>(pNewItem->GetItemWeight());
-				pUIInventory->CallFunction("AddItem", args);
-
-				return true;
-			}
-
-			return true;
-		}
-		//If there isn't enough carrying weight
-		else {
-			//TODO: Show message that you can't carry anymore here!
-		}
-
-	}
 	return false;
 
 }
 
 //Request the adding of the item
-bool CInventoryComponent::RequestAddItem(SItemComponent* pNewItem) {
+bool CInventoryComponent::RequestAddItem(SItemComponent *pNewItem) {
 	
 	//If it is server, continue
 	if (gEnv->bServer) {
@@ -754,36 +763,14 @@ bool CInventoryComponent::ClientRemoveItem(SRemoveItemParams && p, INetChannel *
 	//Gives the server the controll over the entity
 	DelegateAuthorityToServer(p.Id);
 
-	if (pNewItem->GetItemType() == EItemType::MeeleWeapon || EItemType::Weapon) {
-
-		//Remove the weapon weight from the current weigth carried
-		m_fCurrentWeight -= pNewItem->GetItemWeight();
-		int index = GetWeaponSlot(pNewItem);
-		//Check so that the slot isn't -1(invalid)
-		if (index > -1) {
-			//Empty the slot
-			pWeapon[index] = nullptr;
-			//Set selected weapon to null
-			pSelectedWeapon = nullptr;
-			pLastSelectedWeapon = nullptr;
-			//Detach the weapon from the back when you remove it
-			DetachFromBack(index);
-			return true;
-		}
-		return false;
-	}
-	else {
-
-		//Remove the item weight from the current weight carried
-		m_fCurrentWeight -= pNewItem->GetItemWeight();
-		return true;
-	}
+	//Removes the item
+	RemoveItem(pNewItem);
 
 	return false;
 }
 
 //Request the removing of an item
-bool CInventoryComponent::RequestRemoveItem(SItemComponent * pItemToRemove) {
+bool CInventoryComponent::RequestRemoveItem(SItemComponent *pItemToRemove) {
 
 	//If it is the server, continue
 	if (gEnv->bServer) {

@@ -23,11 +23,14 @@ public:
 	void SetHealthbar();
 	void UpdateAmmo();
 	void UpdateAlive(int alive);
+	void UpdateDistance(float distance);
+	void UpdateGasmaskLevel();
 
 private:
 
 	IUIElement *pMainUI;
 	IUIAction *pShowMainUI;
+	IUIAction *pShowCrosshair;
 	IUIActionManager *pManager;
 
 };

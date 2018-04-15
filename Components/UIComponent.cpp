@@ -8,10 +8,12 @@ void CUIComponent::Initialize() {
 	//Gets the element
 	pMainUI = gEnv->pFlashUI->GetUIElement("MainUI");
 	pShowMainUI = gEnv->pFlashUI->GetUIAction("showmainui");
+	pShowCrosshair = gEnv->pFlashUI->GetUIAction("showcrosshair");
 	pManager = gEnv->pFlashUI->GetUIActionManager();
 
 	//Makes sure that the UI is showing at start
 	pManager->StartAction(pShowMainUI, "MainUI");
+	pManager->StartAction(pShowCrosshair, "Crosshair");
 
 	//Show
 	{
@@ -26,6 +28,9 @@ void CUIComponent::Initialize() {
 
 	//UpdateAmmoText
 	UpdateAmmo();
+
+	//Update gasmask level
+	UpdateGasmaskLevel();
 
 }
 
@@ -111,14 +116,70 @@ void CUIComponent::UpdateAmmo() {
 
 }
 
+//Updates the alive text
 void CUIComponent::UpdateAlive(int alive) {
 
+	//Create the UI args
 	SUIArguments args;
 
+	//Create the string to use
 	string sAlive = ToString(alive);
-
+	//Set the argument
 	args.AddArgument<string>(sAlive);
-
+	//Call the function with the arguments
 	pMainUI->CallFunction("UpdateAliveText", args);
+
+}
+
+//Updates the distance text
+void CUIComponent::UpdateDistance(float distance) {
+	
+	//Create the UI args
+	SUIArguments args;
+
+	//Create the string to use
+	string sDistance = ToString(distance) + "m";
+	//Set the argument
+	args.AddArgument<string>(sDistance);
+	//Call the function with the arguments
+	pMainUI->CallFunction("UpdateDistanceText", args);
+
+
+}
+
+//Updates the gasmask level
+void CUIComponent::UpdateGasmaskLevel() {
+
+	//Get the players inventory
+	if (auto *pInventory = m_pEntity->GetComponent<CInventoryComponent>()) {
+
+		//Get the gasmask(if there is any)
+		if (auto *pGasmask = pInventory->GetGasmask()) {
+
+			//Create the args
+			SUIArguments args;
+			
+			//Create the level string
+			string sGasmaskLevel = ToString(pGasmask->GetItemLevel());
+			//Add the string as arg
+			args.AddArgument<string>(sGasmaskLevel);
+			//Call the function
+			pMainUI->CallFunction("UpdateGasmaskLevel", args);
+
+		}
+		else {
+
+			//Create the args
+			SUIArguments args;
+			
+			//Create the level string
+			string sGasmaskLevel = "0";
+			//Add the string as arg
+			args.AddArgument<string>(sGasmaskLevel);
+			//Call the function
+			pMainUI->CallFunction("UpdateGasmaskLevel", args);
+
+		}
+	}
 
 }
