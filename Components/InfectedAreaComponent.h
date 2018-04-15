@@ -74,6 +74,6 @@ protected:
 	int iDamageMode = 0;
 
 	SInfectedAreaProperties sInfectedAreaProperties;
-	std::vector<IEntity*> pPlayerCount = { nullptr };
+	std::vector<IEntity*> pPlayerCount = {};
 
 };

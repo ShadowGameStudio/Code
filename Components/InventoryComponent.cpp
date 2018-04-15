@@ -118,7 +118,7 @@ int CInventoryComponent::GetItemVectorPosition(SItemComponent *pItem) {
 	auto it = std::find(pItems.begin(), pItems.end(), pItem);
 
 	//If it doesn't come to the end, continue
-	if (it != pItems.begin()) {
+	if (it != pItems.end()) {
 
 		//Get the index of the item
 		auto index = std::distance(pItems.begin(), it);
@@ -201,6 +201,13 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 						args.AddArgument<float>(pNewItem->GetItemWeight());
 						//Calls the UI function
 						pUIInventory->CallFunction("AddGasmask", args);
+						//If it can get the entities UIComponent, continue
+						if (CUIComponent *pUI = m_pEntity->GetComponent<CUIComponent>()) {
+							
+							//Update the gasmask level in the UI
+							pUI->UpdateGasmaskLevel();
+
+						}
 						//Sets the current gasmask
 						pCurrentGasmask = pNewItem;
 						return true;
@@ -224,8 +231,8 @@ bool CInventoryComponent::AddItem(SItemComponent *pNewItem) {
 				
 				return true;
 			}
-			
-			return true;
+
+
 		}
 		//If there isn't enough carrying weight
 		else {
@@ -264,7 +271,7 @@ void CInventoryComponent::RemoveItem(SItemComponent *pNewItem) {
 		m_fCurrentWeight -= pNewItem->GetItemWeight();
 
 		//Removes the item from the vector
-		pItems.erase((pItems.begin() + (GetItemVectorPosition(pNewItem) - 1)));
+		pItems.erase(pItems.begin() + (GetItemVectorPosition(pNewItem)));
 
 	}
 	else if (pNewItem->GetItemType() == EItemType::Backpack) {
@@ -282,7 +289,7 @@ void CInventoryComponent::RemoveItem(SItemComponent *pNewItem) {
 		m_fCurrentWeight -= pNewItem->GetItemWeight();
 
 		//Removes the item from the vector
-		pItems.erase((pItems.begin() + (GetItemVectorPosition(pNewItem) - 1)));
+		pItems.erase(pItems.begin() + (GetItemVectorPosition(pNewItem)));
 
 	}
 	else {
@@ -582,6 +589,7 @@ void CInventoryComponent::DeselectWeapon() {
 
 //////////////////////InventoryUI//////////////////////
 
+//Called when a backpack has been added
 bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
 
 	//If the item actually is a backpack, continue
@@ -619,6 +627,7 @@ bool CInventoryComponent::ActivateBackpack(SItemComponent *pBackpack) {
 
 }
 
+//Called when the backpack has been removed
 bool CInventoryComponent::RemoveBackpack(SItemComponent *pBackpack) {
 	
 	//If the item actually is a backpack, continue

@@ -23,7 +23,7 @@ static void RegisterInfectedAreaComponent(Schematyc::IEnvRegistrar& registrar) {
 			auto pLeaving = SCHEMATYC_MAKE_ENV_FUNCTION(&CInfectedAreaComponent::Leaving, "{76FB4A45-21D8-42DB-9900-0B436F8809F8}"_cry_guid, "Leaving");
 			pLeaving->SetDescription("Should be called when player is leaving an area");
 			pLeaving->SetFlags({ Schematyc::EEnvFunctionFlags::Member });
-			pLeaving->BindInput(1, 'eid', "EntityId", "The entity id of the player leaving");
+			pLeaving->BindInput(1, 'eid', "EntityId", "The entity id of the player leaving", Schematyc::ExplicitEntityId());
 			componentScope.Register(pLeaving);
 
 		}
@@ -46,11 +46,11 @@ void CInfectedAreaComponent::ProcessEvent(const SEntityEvent & event) {
 			//When the timer has run out, continue
 			if (event.nParam[0] == Timer_Damage) {
 				//For as many players there is in the area
-				//for (int i = 1; i < iPlayerCount; i++) {
+				for (int i = 0; i < iPlayerCount; i++) {
 				//TODO: Fix for loop
-					if (pPlayerCount[1]) {
+					if (pPlayerCount[i]) {
 
-						IEntity *pPlayer = pPlayerCount[1];
+						IEntity *pPlayer = pPlayerCount[i];
 						//If damage mode is zero, return
 						if (iDamageMode == eDM_NoDamage) {
 							return;
@@ -71,7 +71,7 @@ void CInfectedAreaComponent::ProcessEvent(const SEntityEvent & event) {
 							string test = ToString(pHealth->Get());
 							CryLogAlways(test);
 						}
-				//	}
+					}
 
 				}
 				bTimerSet = false;
@@ -125,12 +125,21 @@ void CInfectedAreaComponent::Leaving(Schematyc::ExplicitEntityId Id) {
 
 	//If it can get the players entity, continue
 	if (IEntity *pPlayer = gEnv->pEntitySystem->GetEntity((EntityId)Id)) {
-		//Find the player in the vector
+
+		//Get where the player is located
 		auto player = std::find(pPlayerCount.begin(), pPlayerCount.end(), pPlayer);
-		//Set the distance to it to an index int
-		auto index = std::distance(pPlayerCount.begin(), player);
-		//Erase the player from the vector
-		pPlayerCount.erase(pPlayerCount.begin() + (index - 1));
+
+		if (player != pPlayerCount.end()) {
+
+			//Set the distance to it to an index int
+			auto index = std::distance(pPlayerCount.begin(), player);
+			//Erase the player from the vector
+			pPlayerCount.erase(pPlayerCount.begin() + index);
+
+		}
+		else {
+			CryLogAlways("PLAYER IS NOT IN VECTOR!");
+		}
 
 	}
 
@@ -141,22 +150,28 @@ void CInfectedAreaComponent::PlayerEntered(EntityId Id) {
 
 	//If it can get the players entity, continue
 	if (IEntity *pPlayer = gEnv->pEntitySystem->GetEntity(Id)) {
+
 		//Add the player to the vector
 		pPlayerCount.push_back(pPlayer);
 		//If it can find the player, continue
 		if (std::find(pPlayerCount.begin(), pPlayerCount.end(), pPlayer) != pPlayerCount.end()) {
+
 			//If it can get the players PlayerComponent, continue
 			if (CPlayerComponent *pPlayerComponent = pPlayer->GetComponent<CPlayerComponent>()) {
+
 				//If the player is wearing a gasmask, continue
 				if (pPlayerComponent->bPlayerIsWearingGasmask == true) {
+
 					//It it can get the players inventory, continue
 					if (CInventoryComponent *pInventory = pPlayer->GetComponent<CInventoryComponent>()) {
+
 						//Get the gasmask item
 						SItemComponent *pGasmaskItem = pInventory->GetGasmask();
 						//Get the gasmask component
 						CGasmaskComponent *pGasmask = pGasmaskItem->GetEntity()->GetComponent<CGasmaskComponent>();
 						//If the gasmasks level is greater or equal to the infected areas gasmask level, continue
 						if (pGasmask->GetGasmaskProperties()->iGasmaskLevel >= GetInfectedProperties()->iGasmaskLevel) {
+
 							//TODO: Check all the time
 							//Turns of the players ability to take damage
 							pPlayerComponent->bCanTakeInfectedDamage = false;
@@ -165,6 +180,7 @@ void CInfectedAreaComponent::PlayerEntered(EntityId Id) {
 						}
 						//If it's not, continue
 						else {
+
 							//Turns of the players ability to take damage
 							pPlayerComponent->bCanTakeInfectedDamage = true;
 							//Set the damage to low
