@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "WeaponComponent.h"
 #include <CryNetwork\Rmi.h>
+#include "BulletComponent.h"
 
 using ServerShootRMI = SRmi<RMI_WRAP(&CWeaponComponent::ServerShoot)>;
 using ClientShootRMI = SRmi<RMI_WRAP(&CWeaponComponent::ClientShoot)>;
@@ -36,51 +37,67 @@ void CWeaponComponent::InitializeClass() {
 		ClientShootRMI::Register(this, attachmentType, bIsServer, reliability);
 	}
 
+	pBullet = m_pEntity->GetOrCreateComponentClass<CRayBulletComponent>();
+
 }
 
 void CWeaponComponent::ProcessEventClass(const SEntityEvent & event) {
 
 	switch (event.event) {
-	case ENTITY_EVENT_COLLISION:
-		
-		//Meele weapon specific
-		//If weapon is meele
-		if (GetWeaponProperties()->bIsMeele) {
-			if (pOwnerEntity) {
-				EventPhysCollision *physCollison = reinterpret_cast<EventPhysCollision *>(event.nParam[0]);
-				if (physCollison) {
 
-					//This Entity
-					IPhysicalEntity *pThisEntityPhyics = physCollison->pEntity[0];
-					IEntity *pThisEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pThisEntityPhyics);
-					IPhysicalEntity *pColliderPhysics = physCollison->pEntity[1];
-					IEntity *pColliderEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pColliderPhysics);
+		case ENTITY_EVENT_COMPONENT_PROPERTY_CHANGED:
+		{
+			SetProperties();
+		}
 
-					//Gets the colliding entitys health and removes health from it if it's not dead
-					if (pColliderEntity && pColliderEntity != m_pEntity && pColliderEntity != pOwnerEntity) {
-						if (CHealthComponent *pVictimHealth = pColliderEntity->GetComponent<CHealthComponent>()) {
-							if (pVictimHealth->IsAlive() && bIsAttacking) {
-								bIsAttacking = false;
-								pVictimHealth->Add((-GetWeaponProperties()->fDamage));
+		case ENTITY_EVENT_COLLISION:
+		{
+			//Meele weapon specific
+			//If weapon is meele
+			if (GetWeaponProperties()->bIsMeele) {
+				if (pOwnerEntity) {
+					EventPhysCollision *physCollison = reinterpret_cast<EventPhysCollision *>(event.nParam[0]);
+					if (physCollison) {
+
+						//This Entity
+						IPhysicalEntity *pThisEntityPhyics = physCollison->pEntity[0];
+						IEntity *pThisEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pThisEntityPhyics);
+						IPhysicalEntity *pColliderPhysics = physCollison->pEntity[1];
+						IEntity *pColliderEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pColliderPhysics);
+
+						//Gets the colliding entitys health and removes health from it if it's not dead
+						if (pColliderEntity && pColliderEntity != m_pEntity && pColliderEntity != pOwnerEntity) {
+							if (CHealthComponent *pVictimHealth = pColliderEntity->GetComponent<CHealthComponent>()) {
+								if (pVictimHealth->IsAlive() && bIsAttacking) {
+									bIsAttacking = false;
+									pVictimHealth->Add((-GetWeaponProperties()->fDamage));
+								}
 							}
 						}
 					}
 				}
 			}
+
+			break;
 		}
 
-		break;
-
-	case ENTITY_EVENT_TIMER:
-
-		//Meele weapon specific
-		//If weapon is meele
-		if (GetWeaponProperties()->bIsMeele) {
-			if (event.nParam[0] == Timer_Attack)
-				bIsAttacking = false;
+		case ENTITY_EVENT_TIMER:
+		{
+			//Meele weapon specific
+			//If weapon is meele
+			if (GetWeaponProperties()->bIsMeele) {
+				if (event.nParam[0] == Timer_Attack)
+					bIsAttacking = false;
+			}
+			break;
 		}
-		break;
 	}
+
+}
+
+void CWeaponComponent::SetProperties() {
+
+	pBullet->fShootingRange = GetWeaponProperties()->fFireRange;
 
 }
 
@@ -121,42 +138,36 @@ void CWeaponComponent::Reload() {
 }
 
 //Shoots the weapon
-void CWeaponComponent::Shoot() {
+void CWeaponComponent::Shoot(EntityId Id) {
 
+	//If the weapon isn't meele, continue
 	if (!GetWeaponProperties()->bIsMeele) {
-		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>()) {
-			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {
 
-				auto *pBarrelOutAttachment = pCharacter->GetIAttachmentManager()->GetInterfaceByName("barrel_out");
+		//If it can get the weapons bullet component, continue
+		if (CRayBulletComponent *pBullet = m_pEntity->GetComponent<CRayBulletComponent>()) {
 
-				if (pBarrelOutAttachment != nullptr) {
+			//Get the entity from the provided Id
+			IEntity *pPlayer = gEnv->pEntitySystem->GetEntity(Id);
 
-					QuatTS bulletOrigin = pBarrelOutAttachment->GetAttWorldAbsolute();
-					SEntitySpawnParams spawnParams;
+			//Get the player component from the entity
+			if (CPlayerComponent *pPlayerComp = pPlayer->GetComponent<CPlayerComponent>()) {
+				
+				//Shot away a bullet
+				pBullet->ShootBullet(pPlayerComp);
+				//Remove a bullet from the mag
+				iCurrAmmo -= 1;
 
-					spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
-					spawnParams.vPosition = bulletOrigin.t;
-					spawnParams.qRotation = bulletOrigin.q;
+				//If it can get the MainUI of the player, continue
+				if (CUIComponent *pUI = pPlayer->GetComponent<CUIComponent>()) {
 
-					const float bulletScale = 0.05f;
-					spawnParams.vScale = Vec3(bulletScale);
-
-					//Spawn the actual entity
-					if (IEntity *pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
-
-						//Adds Bullet Component to Entity
-						pEntity->CreateComponentClass<CBulletComponent>();
-						if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
-							pBullet->SetPlayer(pPlayerShooting);
-
-						//Remove bullet from mag
-						iCurrAmmo -= 1;
-
-					}
+					//Update the ammo text
+					pUI->UpdateAmmo();
 
 				}
 
 			}
+
+
 		}
 
 	}
@@ -186,43 +197,11 @@ bool CWeaponComponent::ClientShoot(SShootParams && p, INetChannel * pNetChannel)
 
 	//Check so that weapon acually isn't meele
 	if (!GetWeaponProperties()->bIsMeele) {
-		if (Cry::DefaultComponents::CAdvancedAnimationComponent *pAnimationComponent = pPlayerShooting->GetEntity()->GetComponent<Cry::DefaultComponents::CAdvancedAnimationComponent>()) {
-			if (ICharacterInstance *pCharacter = pAnimationComponent->GetCharacter()) {
 
-				auto *pBarrelOutAttachment = pCharacter->GetIAttachmentManager()->GetInterfaceByName("barrel_out");
-
-				if (pBarrelOutAttachment != nullptr) {
-
-					QuatTS bulletOrigin = pBarrelOutAttachment->GetAttWorldAbsolute();
-					SEntitySpawnParams spawnParams;
-
-					spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
-					spawnParams.vPosition = bulletOrigin.t;
-					spawnParams.qRotation = bulletOrigin.q;
-
-					const float bulletScale = 0.05f;
-					spawnParams.vScale = Vec3(bulletScale);
-
-					//Spawn the actual entity
-					if (IEntity *pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
-
-						//Adds Bullet Component to Entity
-						pEntity->CreateComponentClass<CBulletComponent>();
-						if (CBulletComponent *pBullet = pEntity->GetComponent<CBulletComponent>())
-							pBullet->SetPlayer(pPlayerShooting);
-
-						//Remove bullet from mag
-						iCurrAmmo -= 1;
-
-					}
-
-				}
-
-			}
-		}
+		//Shoot away a bullet
+		Shoot(p.playerId);
 
 	}
-
 	return true;
 }
 

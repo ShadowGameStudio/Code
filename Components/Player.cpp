@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "Player.h"
 
-#include "Bullet.h"
+#include "BulletComponent.h"
 #include "SpawnPoint.h"
 #include "FlashUI\FlashUI.h"
 
@@ -148,6 +148,24 @@ void CPlayerComponent::ReflectType(Schematyc::CTypeDesc<CPlayerComponent>& desc)
 	desc.SetLabel("Player Component");
 	desc.SetDescription("Player component");
 	desc.SetComponentFlags({ IEntityComponent::EFlags::Transform, IEntityComponent::EFlags::Socket, IEntityComponent::EFlags::Attach });
+
+}
+
+//Gets the players view direction, and returns it
+Vec3 CPlayerComponent::GetViewWorldDirection() {
+
+	//If it can get the player component, continue
+	if (CPlayerComponent *pPlayer = m_pEntity->GetComponent<CPlayerComponent>()) {
+		
+		//Gets the view direction
+		Vec3 vDir = (pPlayer->GetEntity()->GetWorldPos() - m_pEntity->GetWorldPos()).normalized();
+
+		//returns the view direction
+		return vDir;
+
+	}
+	
+	return Vec3();
 
 }
 

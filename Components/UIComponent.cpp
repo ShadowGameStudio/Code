@@ -2,6 +2,7 @@
 
 #include "UIComponent.h"
 #include "ItemComponent.h"
+#include "WeaponComponent.h"
 
 void CUIComponent::Initialize() {
 

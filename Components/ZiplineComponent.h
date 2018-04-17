@@ -9,14 +9,19 @@ Purpose : Handels the zipline functionality
 #pragma once
 
 #include <CryEntitySystem/IEntityComponent.h>
+#include "ItemComponent.h"
 
-class CZiplineComponent : public IEntityComponent {
+class CZiplineComponent : public SItemComponent {
 public:
 	CZiplineComponent() = default;
 
-	virtual void Initialize() override;
-	virtual uint64 GetEventMask() const override;
-	virtual void ProcessEvent(const SEntityEvent& event) override;
+	virtual void InitializeClass() override;
+	virtual void ProcessEventClass(const SEntityEvent& event) override;
 	static void ReflectType(Schematyc::CTypeDesc<CZiplineComponent>& desc);
+
+	void OnZiplineAttached();
+	void OnZiplineDetached();
+
+	void StartRaycast();
 
 };

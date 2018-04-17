@@ -1,9 +1,10 @@
 #include "StdAfx.h"
 #include "Player.h"
-#include "Bullet.h"
+#include "BulletComponent.h"
 #include "ItemComponent.h"
 #include "HealthpackComponent.h"
 #include "PlayAreaComponent.h"
+#include "WeaponComponent.h"
 
 void CPlayerComponent::InitializeInput() {
 
@@ -365,7 +366,7 @@ void CPlayerComponent::Action_Heal(int activationMode) {
 void CPlayerComponent::Action_SpawnDome(int activationMode) {
 
 	if (bFreezePlayer)
-		return;
+		return;          
 
 	CPlayAreaComponent PA;
 

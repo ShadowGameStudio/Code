@@ -32,6 +32,7 @@ class CWeaponComponent : public SItemComponent {
 		int iMaxAmmo;
 		int iClipAmmo;
 		float fDamage;
+		float fFireRange;
 		Schematyc::CSharedString sBulletType;
 
 		static void ReflectType(Schematyc::CTypeDesc<SWeaponProperties>& desc) {
@@ -45,6 +46,7 @@ class CWeaponComponent : public SItemComponent {
 			desc.AddMember(&SWeaponProperties::iMaxAmmo, 'imax', "MaxAmmo", "Max Ammo", "Max amount of ammo you can carry for this weapon", 0);
 			desc.AddMember(&SWeaponProperties::sBulletType, 'sbut', "BulletType", "Bullet Type", "Sets the bullet type", "");
 			desc.AddMember(&SWeaponProperties::sBulletType, 'sbut', "BulletType", "Bullet Type", "Sets the bullet type", "");
+			desc.AddMember(&SWeaponProperties::fFireRange, 'ffir', "FireRange", "Fire Range", "Sets how far the bullet can travel", 0.f);
 
 		}
 
@@ -83,6 +85,7 @@ public:
 
 	virtual void InitializeClass() override;
 	virtual void ProcessEventClass(const SEntityEvent& event) override;
+	void SetProperties();
 	static void ReflectType(Schematyc::CTypeDesc<CWeaponComponent>& desc);
 
 	bool GetIsMeele() { return GetWeaponProperties()->bIsMeele; }
@@ -93,7 +96,7 @@ public:
 
 	//Non-meele weapon specific
 	void Reload();
-	void Shoot();
+	void Shoot(EntityId Id);
 
 	//Network
 	bool ClientShoot(SShootParams&& p, INetChannel *pNetChannel);
@@ -109,9 +112,13 @@ public:
 	SFiremodeProperties *GetFiremodeProperties() { return &sFiremodeProperties; }
 
 private:
-	bool bIsAttacking = false;
-	int iCurrAmmo = GetWeaponProperties()->iClipAmmo;
 
+	bool bIsAttacking = false;
+	int iCurrAmmo = GetClipAmmo();
+	int iMaxAmmo = GetMaxAmmo();
+	float fDamage = GetDamage();
+
+	CRayBulletComponent *pBullet = nullptr;
 
 protected:
 	SWeaponProperties sWeaponProperties;

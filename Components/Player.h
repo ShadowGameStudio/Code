@@ -134,6 +134,8 @@ public:
 	bool bCanTakeInfectedDamage = true;
 	bool bPlayerHasBackpack = false;
 
+	Vec3 GetViewWorldDirection();
+
 protected:
 	void UpdateMovementRequest(float frameTime);
 	void UpdateLookDirectionRequest(float frameTime);
