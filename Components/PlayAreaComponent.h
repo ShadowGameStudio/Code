@@ -31,7 +31,6 @@ public:
 //	virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) override;
 	virtual NetworkAspectType GetNetSerializeAspectMask() const { return kDecreaseAspect; }
 
-	void SpawnPlayArea();
 	void DecreasePlayArea();
 	void Update(float frameTime);
 

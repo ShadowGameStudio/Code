@@ -152,10 +152,16 @@ void CWeaponComponent::Shoot(EntityId Id) {
 			//Get the player component from the entity
 			if (CPlayerComponent *pPlayerComp = pPlayer->GetComponent<CPlayerComponent>()) {
 				
+				//Add recoil
+				AddRecoil();
+
 				//Shot away a bullet
 				pBullet->ShootBullet(pPlayerComp);
 				//Remove a bullet from the mag
 				iCurrAmmo -= 1;
+
+				//Remove the recoil 
+				RemoveRecoil();
 
 				//If it can get the MainUI of the player, continue
 				if (CUIComponent *pUI = pPlayer->GetComponent<CUIComponent>()) {
@@ -173,6 +179,17 @@ void CWeaponComponent::Shoot(EntityId Id) {
 	}
 
 }
+
+//Adds recoil to the weapon
+void CWeaponComponent::AddRecoil() {
+
+
+
+}
+
+void CWeaponComponent::RemoveRecoil() {}
+
+
 
 //Starting meele attack
 void CWeaponComponent::StartAttack() {
@@ -217,7 +234,8 @@ bool CWeaponComponent::ServerShoot(SShootParams && p, INetChannel * pNetChannel)
 bool CWeaponComponent::RequestShot(EntityId playerId) {
 	if (gEnv->bServer) {
 
-
+		//Shoots the weapon directly
+		Shoot(playerId);
 
 	}
 	else {

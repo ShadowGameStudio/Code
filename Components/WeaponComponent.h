@@ -33,6 +33,7 @@ class CWeaponComponent : public SItemComponent {
 		int iClipAmmo;
 		float fDamage;
 		float fFireRange;
+		float fRecoilAmount;
 		Schematyc::CSharedString sBulletType;
 
 		static void ReflectType(Schematyc::CTypeDesc<SWeaponProperties>& desc) {
@@ -47,6 +48,7 @@ class CWeaponComponent : public SItemComponent {
 			desc.AddMember(&SWeaponProperties::sBulletType, 'sbut', "BulletType", "Bullet Type", "Sets the bullet type", "");
 			desc.AddMember(&SWeaponProperties::sBulletType, 'sbut', "BulletType", "Bullet Type", "Sets the bullet type", "");
 			desc.AddMember(&SWeaponProperties::fFireRange, 'ffir', "FireRange", "Fire Range", "Sets how far the bullet can travel", 0.f);
+			desc.AddMember(&SWeaponProperties::fRecoilAmount, 'frec', "RecoilAmount", "Recoil Amount", "Sets the amount of recoil the weapon should hade", 0.f);
 
 		}
 
@@ -93,10 +95,15 @@ public:
 	int GetClipAmmo() { return GetWeaponProperties()->iClipAmmo; }
 	int GetCurrAmmo() { return iCurrAmmo;  }
 	float GetDamage() { return GetWeaponProperties()->fDamage; }
+	float GetRecoild() { return GetWeaponProperties()->fRecoilAmount; }
+	float GetFireRange() { return GetWeaponProperties()->fFireRange; }
 
 	//Non-meele weapon specific
 	void Reload();
 	void Shoot(EntityId Id);
+
+	void AddRecoil();
+	void RemoveRecoil();
 
 	//Network
 	bool ClientShoot(SShootParams&& p, INetChannel *pNetChannel);

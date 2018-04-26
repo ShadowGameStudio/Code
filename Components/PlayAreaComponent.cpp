@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "PlayAreaComponent.h"
-#include "PlayAreaSpawnComponent.h"
+#include "PlayAreaSpawnerComponent.h"
 #include "SpawnPoint.h"
 
 static void RegisterPlayAreaComponent(Schematyc::IEnvRegistrar& registrar) {
@@ -17,22 +17,8 @@ CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterPlayAreaComponent)
 
 void CPlayAreaComponent::Initialize() {
 
-	//Set model
-	const int geometrySlot = 0;
-	m_pEntity->LoadGeometry(geometrySlot, "Objects/Default/primitive_box.cgf");
-
-	//Set mat
-	//auto *pEnclosureMaterial = gEnv->p3DEngine->GetMaterialManager()->LoadMaterial("Materials/REPLACE");
-	//m_pEntity->SetMaterial(pEnclosureMaterial);
-
-	//Physical representation
-	SEntityPhysicalizeParams physParams;
-	physParams.type = PE_STATIC;
-	physParams.mass = 20000.f;
-	m_pEntity->Physicalize(physParams);
-
-	//Set max view distance
-	GetEntity()->SetViewDistRatio(255);
+	//Binds the entity to the network
+	m_pEntity->GetNetEntity()->BindToNetwork();
 
 	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
 
@@ -106,29 +92,6 @@ void CPlayAreaComponent::ReflectType(Schematyc::CTypeDesc<CPlayAreaComponent>& d
 
 }
 
-//Spawns the play area it self
-void CPlayAreaComponent::SpawnPlayArea() {
-
-	//Setup spawn params for play area
-	SEntitySpawnParams spawnParams;
-
-	spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
-	spawnParams.sName = "PlayArea";
-	spawnParams.vPosition = Vec3(540, 581, 34);
-	spawnParams.vScale = Vec3(fScaleX, fScaleY, fScaleZ);
-
-	//Spawn the entity
-	if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams)) {
-
-		//Adds PlayAreaComponent to entity
-		pEntity->CreateComponentClass<CPlayAreaComponent>();
-		//Bind to network
-		pEntity->GetNetEntity()->BindToNetwork();
-
-	}
-
-}
-
 //Makes the play area smaller over time
 void CPlayAreaComponent::DecreasePlayArea() {
 
@@ -136,8 +99,6 @@ void CPlayAreaComponent::DecreasePlayArea() {
 	//Makes sure that the Play Area only decreases by fDecreaseAmount every 1ms
 
 	//Checks if it already has been decreased or not
-
-	//Change function to work with new system
 	if(!bIsDecreased)
 		m_pEntity->SetTimer(Timer_Decrease, 1);
 	else if (!bTimerSet) {
