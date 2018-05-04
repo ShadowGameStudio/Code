@@ -370,7 +370,7 @@ void CPlayerComponent::Action_SpawnDome(int activationMode) {
 
 	CPlayAreaComponent PA;
 
-	if (activationMode == eIS_Pressed)
-		PA.SpawnPlayArea();
+	//if (activationMode == eIS_Pressed)
+		//PA.SpawnPlayArea();
 
 }
