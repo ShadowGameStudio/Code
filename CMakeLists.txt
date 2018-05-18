@@ -8,6 +8,7 @@ set(PROJECT_DIR "J:/BR")
 include("${TOOLS_CMAKE_DIR}/CommonOptions.cmake")
 
 add_subdirectory("${CRYENGINE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/CRYENGINE")
+ADD_DEFINITIONS("/ZI")
 
 include("${TOOLS_CMAKE_DIR}/Configure.cmake")
 start_sources()
