@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 
 #include "BulletComponent.h" 
+#include "WeaponComponent.h"
 
 void CRayBulletComponent::Initialize() {}
 

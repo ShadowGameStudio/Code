@@ -16,6 +16,7 @@
 #include "HealthpackComponent.h"
 #include "HealthComponent.h"
 #include "UIComponent.h"
+#include "VehicleComponent.h"
 
 ////////////////////////////////////////////////////////
 // Represents a player participating in gameplay
@@ -165,6 +166,7 @@ protected:
 
 	//Player specific methods
 	void PickUp(SItemComponent *pNewItem);
+	void EnterVehicle(CVehicleComponent *pVehicle);
 	void SetPlayerParams();
 	//
 
@@ -192,6 +194,7 @@ protected:
 	MovingAverage<float, 10> m_averagedHorizontalAngularVelocity;
 
 	SItemComponent *pTargetItem = nullptr;
+	CVehicleComponent *pTargetVehicle = nullptr;
 
 	bool bFreezePlayer;
 	bool bIsTP = false;

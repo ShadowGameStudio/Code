@@ -9,7 +9,6 @@
 
 #include <IGameObjectSystem.h>
 #include <IGameObject.h>
-#include "FlashUI\FlashUI.h"
 
 // Included only once per DLL module.
 #include <CryCore/Platform/platform_impl.inl>
@@ -17,10 +16,9 @@
 CGamePlugin::~CGamePlugin()
 {
 	// Remove any registered listeners before 'this' becomes invalid
-	if (gEnv->pGameFramework != nullptr) {
-
+	if (gEnv->pGameFramework != nullptr)
+	{
 		gEnv->pGameFramework->RemoveNetworkedClientListener(*this);
-	
 	}
 
 	gEnv->pSystem->GetISystemEventDispatcher()->RemoveListener(this);
@@ -35,7 +33,7 @@ bool CGamePlugin::Initialize(SSystemGlobalEnvironment& env, const SSystemInitPar
 {
 	// Register for engine system events, in our case we need ESYSTEM_EVENT_GAME_POST_INIT to load the map
 	gEnv->pSystem->GetISystemEventDispatcher()->RegisterListener(this, "CGamePlugin");
-
+	
 	return true;
 }
 
@@ -43,42 +41,43 @@ void CGamePlugin::OnSystemEvent(ESystemEvent event, UINT_PTR wparam, UINT_PTR lp
 {
 	switch (event)
 	{
-	case ESYSTEM_EVENT_REGISTER_SCHEMATYC_ENV:
-	{
-		// Register all components that belong to this plug-in
-		auto staticAutoRegisterLambda = [](Schematyc::IEnvRegistrar& registrar)
-		{
-			// Call all static callback registered with the CRY_STATIC_AUTO_REGISTER_WITH_PARAM
-			Detail::CStaticAutoRegistrar<Schematyc::IEnvRegistrar&>::InvokeStaticCallbacks(registrar);
-		};
-
-		if (gEnv->pSchematyc)
-		{
-			gEnv->pSchematyc->GetEnvRegistry().RegisterPackage(
-				stl::make_unique<Schematyc::CEnvPackage>(
-					CGamePlugin::GetCID(),
-					"EntityComponents",
-					"Crytek GmbH",
-					"Components",
-					staticAutoRegisterLambda
-					)
-			);
-		}
-	}break;
 		// Called when the game framework has initialized and we are ready for game logic to start
-	case ESYSTEM_EVENT_GAME_POST_INIT:
-	{
-		// Listen for client connection events, in order to create the player
-		gEnv->pGameFramework->AddNetworkedClientListener(*this);
-
-		// Don't need to load the map in editor
-		if (!gEnv->IsEditor())
+		case ESYSTEM_EVENT_GAME_POST_INIT:
 		{
-			gEnv->pConsole->ExecuteString("map example_2", false, true);
-		}
+			// Listen for client connection events, in order to create the local player
+			gEnv->pGameFramework->AddNetworkedClientListener(*this);
 
-	}
-	break;
+			// Don't need to load the map in editor
+			if (!gEnv->IsEditor())
+			{
+				gEnv->pConsole->ExecuteString("map example", false, true);
+			}
+		}
+		break;
+
+		case ESYSTEM_EVENT_REGISTER_SCHEMATYC_ENV:
+		{
+			// Register all components that belong to this plug-in
+			auto staticAutoRegisterLambda = [](Schematyc::IEnvRegistrar& registrar)
+			{
+				// Call all static callback registered with the CRY_STATIC_AUTO_REGISTER_WITH_PARAM
+				Detail::CStaticAutoRegistrar<Schematyc::IEnvRegistrar&>::InvokeStaticCallbacks(registrar);
+			};
+
+			if (gEnv->pSchematyc)
+			{
+				gEnv->pSchematyc->GetEnvRegistry().RegisterPackage(
+					stl::make_unique<Schematyc::CEnvPackage>(
+						CGamePlugin::GetCID(),
+						"EntityComponents",
+						"Crytek GmbH",
+						"Components",
+						staticAutoRegisterLambda
+						)
+				);
+			}
+		}
+		break;
 	}
 }
 
@@ -87,11 +86,16 @@ bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 	// Connection received from a client, create a player entity and component
 	IEntityClass *pPlayerClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass("schematyc::players::player_main");
 	SEntitySpawnParams spawnParams;
-	if (!gEnv->IsEditor())
+
+	if (!gEnv->IsEditor()) {
 		spawnParams.pClass = pPlayerClass;
-	else
+    } 
+	else {
 		spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
-	string sName = string().Format("Player%" PRISIZE_T, m_players.size());
+    }
+
+    string sName = string().Format("Player%" PRISIZE_T, m_players.size());
+	spawnParams.pClass = gEnv->pEntitySystem->GetClassRegistry()->GetDefaultClass();
 	spawnParams.sName = "Player";
 	spawnParams.nFlags |= ENTITY_FLAG_NEVER_NETWORK_STATIC;
 	
@@ -105,12 +109,12 @@ bool CGamePlugin::OnClientConnectionReceived(int channelId, bool bIsReset)
 	// Spawn the player entity
 	if (IEntity* pPlayerEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams))
 	{
-		if(gEnv->IsEditor())
-			pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
-
 		// Set the local player entity channel id, and bind it to the network so that it can support Multiplayer contexts
 		pPlayerEntity->GetNetEntity()->SetChannelId(channelId);
 		pPlayerEntity->GetNetEntity()->BindToNetwork();
+
+		// Create the player component instance
+		CPlayerComponent* pPlayer = pPlayerEntity->GetOrCreateComponentClass<CPlayerComponent>();
 
 		// Push the component into our map, with the channel id as the key
 		m_players.emplace(std::make_pair(channelId, pPlayerEntity->GetId()));
@@ -129,8 +133,7 @@ bool CGamePlugin::OnClientReadyForGameplay(int channelId, bool bIsReset)
 		{
 			if (CPlayerComponent* pPlayer = pPlayerEntity->GetComponent<CPlayerComponent>())
 			{
-				if (gEnv->IsEditor())
-					pPlayer->Revive();
+				pPlayer->Revive();
 			}
 		}
 	}

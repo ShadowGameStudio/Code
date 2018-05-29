@@ -182,13 +182,28 @@ void CPlayerComponent::Update(float frameTime) {
 	float lastDist = 100.f;
 	float curDist = 0.f;
 	SItemComponent *pNewItem = nullptr;
+	CVehicleComponent *pNewVehicle = nullptr;
 
 	for (int i = 0; i < num; i++) {
 
 		if (IPhysicalEntity *pPhys = pEntityList[i]) {
 			if (IEntity *pInteractingEntity = gEnv->pEntitySystem->GetEntityFromPhysics(pPhys)) {
-				if (SItemComponent *pPickupItem = pInteractingEntity->GetComponent<SItemComponent>()) {
-					if (pPickupItem->IsPickable()) {
+				if (CVehicleComponent *pVehicle = pInteractingEntity->GetComponent<CVehicleComponent>()) {
+
+					const Vec3 vehiclePos = pInteractingEntity->GetWorldPos();
+					const Vec3 diff = vehiclePos - m_pEntity->GetWorldPos();
+					curDist = sqrt(powf(diff.x, 2.f) + powf(diff.y, 2.f));
+
+					if (curDist < lastDist) {
+
+						lastDist = curDist;
+						pNewVehicle = pVehicle;
+
+					}
+
+				}
+				else if (SItemComponent *pPickupItem = pInteractingEntity->GetComponent<SItemComponent>()) {
+						if (pPickupItem->IsPickable()) {
 
 						const Vec3 newItemPos = pInteractingEntity->GetWorldPos();
 						const Vec3 diff = newItemPos - m_pEntity->GetWorldPos();
@@ -202,13 +217,21 @@ void CPlayerComponent::Update(float frameTime) {
 						}
 					}
 				}
-
 			}
 		}
-
 	}
-	pTargetItem = pNewItem;
-	if (pTargetItem) {
+
+	if (pNewVehicle) {
+		pTargetVehicle = pNewVehicle;
+	}
+	else if (pNewItem) {
+		pTargetItem = pNewItem;
+	}
+
+	if (pTargetVehicle) {
+		ShowPickupMessage(pTargetVehicle->GetItemName());
+	}
+	else if (pTargetItem) {
 		ShowPickupMessage(pTargetItem->GetItemName());
 	}
 }

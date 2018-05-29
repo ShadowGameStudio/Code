@@ -148,6 +148,9 @@ void CPlayerComponent::Action_Use(int activationMode) {
 		return;
 	if (activationMode == eIS_Pressed) {
 
+		if (pTargetVehicle)
+			EnterVehicle(pTargetVehicle);
+
 		if (pTargetItem)
 			PickUp(pTargetItem);
 

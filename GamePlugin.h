@@ -17,14 +17,14 @@ class CGamePlugin
 {
 public:
 	CRYINTERFACE_SIMPLE(Cry::IEnginePlugin)
-	CRYGENERATE_SINGLETONCLASS_GUID(CGamePlugin, "Game_Blank", "{0900F201-49F3-4B3C-81D1-0C91CF3C8FDA}"_cry_guid)
+	CRYGENERATE_SINGLETONCLASS_GUID(CGamePlugin, "ThirdPersonShooter", "{0900F201-49F3-4B3C-81D1-0C91CF3C8FDA}"_cry_guid)
 
 	virtual ~CGamePlugin();
 	
-	// ICryPlugin
+	// Cry::IEnginePlugin
 	virtual const char* GetCategory() const override { return "Game"; }
 	virtual bool Initialize(SSystemGlobalEnvironment& env, const SSystemInitParams& initParams) override;
-	// ~ICryPlugin
+	// ~Cry::IEnginePlugin
 
 	// ISystemEventListener
 	virtual void OnSystemEvent(ESystemEvent event, UINT_PTR wparam, UINT_PTR lparam) override;

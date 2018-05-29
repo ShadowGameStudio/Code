@@ -10,6 +10,7 @@ Purpose : Handels all the drugs funcitonality
 
 #include <CryEntitySystem/IEntityComponent.h>
 #include "ItemComponent.h"
+#include "CryNetwork/Rmi.h"
 
 class CDrugComponent : public SItemComponent {
 

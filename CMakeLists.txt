@@ -3,12 +3,11 @@ set(CRYENGINE_DIR "C:/Program Files (x86)/Crytek/CRYENGINE Launcher/Crytek/CRYEN
 set(TOOLS_CMAKE_DIR "${CRYENGINE_DIR}/Tools/CMake")
 
 set(PROJECT_BUILD 1)
-set(PROJECT_DIR "J:/BR")
+set(PROJECT_DIR "${CMAKE_SOURCE_DIR}/../")
 
 include("${TOOLS_CMAKE_DIR}/CommonOptions.cmake")
 
 add_subdirectory("${CRYENGINE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/CRYENGINE")
-ADD_DEFINITIONS("/ZI")
 
 include("${TOOLS_CMAKE_DIR}/Configure.cmake")
 start_sources()
@@ -81,14 +80,11 @@ add_sources("Components_uber.cpp"
 		"Components/PlayAreaComponent.h"
 		"Components/PlayAreaComponent.cpp"
 		"Components/PlayAreaSpawnerComponent.h"
-		"Components/PlayAreaSpawnerComponent.cpp"
-
-)
-add_sources("Nodes_uber.cpp"
-    PROJECTS Game
-    SOURCE_GROUP "Nodes"
-		"Nodes/BaseFlowNodes.cpp"
-		"Nodes/BaseFlowNodes.h"
+        "Components/PlayAreaSpawnerComponent.cpp"
+        SOURCE_GROUP "Components\\\\Gameplay\\\\Vehicle"
+        "Components/VehicleComponent.cpp"
+        "Components/VehicleComponent.h"
+        "Components/VehicleProperties.h"
 )
 
 end_sources()
@@ -101,9 +97,6 @@ PRIVATE
     "${CRYENGINE_DIR}/Code/CryEngine/CryAction"
     "${CRYENGINE_DIR}/Code/CryEngine/CrySchematyc/Core/Interface"
     "${CRYENGINE_DIR}/Code/CryPlugins/CryDefaultEntities/Module"
-	"${CRYENGINE_DIR}/Code/CryPlugins/CryGamePlatform/Module"
-	"${CRYENGINE_DIR}/Code/CryPlugins/CryGamePlatform/Interface"
-	"${CRYENGINE_DIR}/Code/SDKs/Steamworks/public"
 )
 
 
@@ -112,26 +105,26 @@ if(OPTION_ENGINE)
 		add_library(Editor STATIC "${CRYENGINE_DIR}/Code/CryEngine/CryCommon/CryCore/Platform/platform.h")
 		set_target_properties(Editor PROPERTIES LINKER_LANGUAGE CXX)
 		if (WIN32)
-			set_visual_studio_debugger_command(Editor "${CRYENGINE_DIR}/bin/win_x64/Sandbox.exe" "-project \"J:/BR/Game.cryproject\"")
+			set_visual_studio_debugger_command(Editor "${CRYENGINE_DIR}/bin/win_x64/Sandbox.exe" "-project \"${PROJECT_DIR}Game.cryproject\"")
 		endif()
 	endif()
 else()
 	add_library(GameLauncher STATIC "${CRYENGINE_DIR}/Code/CryEngine/CryCommon/CryCore/Platform/platform.h")
 	set_target_properties(GameLauncher PROPERTIES LINKER_LANGUAGE CXX)
 	if (WIN32)
-		set_visual_studio_debugger_command(GameLauncher "${CRYENGINE_DIR}/bin/win_x64/GameLauncher.exe" "-project \"J:/BR/Game.cryproject\"")
+		set_visual_studio_debugger_command(GameLauncher "${CRYENGINE_DIR}/bin/win_x64/GameLauncher.exe" "-project \"${PROJECT_DIR}Game.cryproject\"")
 	endif()
 
     add_library(Editor STATIC "${CRYENGINE_DIR}/Code/CryEngine/CryCommon/CryCore/Platform/platform.h")
     set_target_properties(Editor PROPERTIES LINKER_LANGUAGE CXX)
     if (WIN32)
-        set_visual_studio_debugger_command(Editor "${CRYENGINE_DIR}/bin/win_x64/Sandbox.exe" "-project \"J:/BR/Game.cryproject\"")
+        set_visual_studio_debugger_command(Editor "${CRYENGINE_DIR}/bin/win_x64/Sandbox.exe" "-project \"${PROJECT_DIR}Game.cryproject\"")
     endif()
 
 	add_library(GameServer STATIC "${CRYENGINE_DIR}/Code/CryEngine/CryCommon/CryCore/Platform/platform.h")
 	set_target_properties(GameServer PROPERTIES LINKER_LANGUAGE CXX)
 	if (WIN32)
-		set_visual_studio_debugger_command(GameServer "${CRYENGINE_DIR}/bin/win_x64/Game_Server.exe" "-project \"J:/BR/Game.cryproject\"")
+		set_visual_studio_debugger_command(GameServer "${CRYENGINE_DIR}/bin/win_x64/Game_Server.exe" "-project \"${PROJECT_DIR}Game.cryproject\"")
 	endif()
 endif()
 
@@ -139,7 +132,7 @@ endif()
 set_solution_startup_target(GameLauncher)
 
 if (WIN32)
-    set_visual_studio_debugger_command( ${THIS_PROJECT} "${CRYENGINE_DIR}/bin/win_x64/GameLauncher.exe" "-project \"J:/BR/Game.cryproject\"" )
+    set_visual_studio_debugger_command( ${THIS_PROJECT} "${CRYENGINE_DIR}/bin/win_x64/GameLauncher.exe" "-project \"${PROJECT_DIR}Game.cryproject\"" )
 endif()
 
 #BEGIN-CUSTOM

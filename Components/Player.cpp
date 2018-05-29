@@ -246,6 +246,22 @@ void CPlayerComponent::PickUp(SItemComponent *pNewItem) {
 
 }
 
+void CPlayerComponent::EnterVehicle(CVehicleComponent * pVehicle) {
+
+	//Check so that it's actually a vehicle
+	if (!pVehicle)
+		return;
+
+	//Gets the entity from the vehicle component
+	IEntity *pVehicleEntity = pVehicle->GetEntity();
+
+	//Enter the vehicle
+	pVehicle->RequestEnter(m_pEntity, pVehicleEntity);
+
+
+
+}
+
 void CPlayerComponent::AttachToBack(SItemComponent *pWeaponToAttach, int slotId) {
 
 	string slotString = ToString(slotId);
