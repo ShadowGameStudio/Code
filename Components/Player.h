@@ -144,7 +144,7 @@ protected:
 	void UpdateCamera(float frameTime);
 	void UpdateFPCamera(float frameTime);
 	void Update(float frameTime);
-	void ShowPickupMessage(string itemName);
+	void ShowMessage(string itemName);
 
 	void SpawnAtSpawnPoint();
 

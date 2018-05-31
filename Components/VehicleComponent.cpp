@@ -24,6 +24,7 @@ void CVehicleComponent::Initialize() {
     
 	LoadGeometry();
 	Physicalize();
+	CreateVehicleName();
 
 	//Enter RMI(Server)
 	{
@@ -128,18 +129,47 @@ bool CVehicleComponent::SvEnterVehicle(SEnterParams && p, INetChannel * pNetChan
 		//If the vehicle isn't full, continue
 		if (pVehicleComponent->iCurrentPassengers < pVehicleComponent->GetProperties()->iMaxPassengers) {
 
-			//If it doesn't have a drivet, continue
+			//If it doesn't have a driver, continue
 			if (!pVehicleComponent->bHasDriver) {
 
+				//Gets the player entity
+				IEntity *pPlayer = gEnv->pEntitySystem->GetEntity(p.PassId);
 
+				//Gets the location of the drivers seat
+				Vec3 vehiclePos = pVehicle->GetWorldTM().GetTranslation();
+				Vec3 driverSeat = vehiclePos + GetProperties()->vDriversSeat;
+
+				pPlayer->SetPos(driverSeat);
+
+				//Adds the new player to the count
+				pVehicleComponent->iCurrentPassengers++;
+				//Sets that it now has a driver.
+				pVehicleComponent->bHasDriver = true;
+
+				//Pass it on to the client
+				ClEnterVehicleRMI::InvokeOnClient(this, SEnterParams{ p.PassId, p.VecId, p.channelId }, p.channelId);
 
 			}
 			else {
+
+				//Move player to the next slot
+
+				//Adds the new player to the count
+				pVehicleComponent->iCurrentPassengers++;
+
+				ClEnterVehicleRMI::InvokeOnClient(this, SEnterParams{ p.PassId, p.VecId, p.channelId }, p.channelId);
 
 			}
 
 		}
 		else {
+
+			//Give the player a message that the vehicle is full
+			Vec2 screenMid = { gEnv->pRenderer->GetWidth() / 2.f, gEnv->pRenderer->GetHeight() / 2.f };
+			ColorF pfWhite = { 1.f, 1.f, 1.f, 1.f };
+			string sMessage = GetVehicleName();
+			gEnv->pRenderer->GetIRenderAuxGeom()->Draw2dLabel(screenMid.x, screenMid.y, 1.5f, pfWhite, true, sMessage + "is full!");
+
 			return false;
 		}
 
@@ -159,8 +189,9 @@ void CVehicleComponent::RequestEnter(IEntity *pNewPassenger, IEntity *pVehicle) 
 		//Gets the new passengers EntityId
 		EntityId PassId = pNewPassenger->GetId();
 		EntityId VecId = pVehicle->GetId();
+		int channelId = pNewPassenger->GetNetEntity()->GetChannelId();
 		//Sends a request to the server
-		SvEnterVehicleRMI::InvokeOnServer(this, SEnterParams{ PassId, VecId });
+		SvEnterVehicleRMI::InvokeOnServer(this, SEnterParams{ PassId, VecId, channelId });
 	
 	}
 
@@ -168,4 +199,16 @@ void CVehicleComponent::RequestEnter(IEntity *pNewPassenger, IEntity *pVehicle) 
 }
 
 void CVehicleComponent::RequestLeave(IEntity *pPassenger, IEntity *pVehicle) {
+}
+
+void CVehicleComponent::CreateVehicleName() {
+
+	string sLongName = m_pEntity->GetClass()->GetName();
+
+	sLongName.erase(0, sLongName.find_last_of(':') + 1);
+	string sFirst;
+	sFirst.SetAt(0, sLongName[0]);
+	sFirst.MakeUpper();
+	sLongName.erase(0, 1);
+	GetProperties()->sVehicleName = sFirst + sLongName;
 }

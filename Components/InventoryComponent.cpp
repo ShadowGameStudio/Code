@@ -731,7 +731,7 @@ bool CInventoryComponent::RequestAddItem(SItemComponent *pNewItem) {
 	//If it is server, continue
 	if (gEnv->bServer) {
 		//Adds the item the old fashion way
-		AddItem(pNewItem);
+		AddI tem(pNewItem);
 		return true;
 	}
 	//Else, continue

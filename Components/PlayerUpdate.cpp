@@ -229,17 +229,26 @@ void CPlayerComponent::Update(float frameTime) {
 	}
 
 	if (pTargetVehicle) {
-		ShowPickupMessage(pTargetVehicle->GetItemName());
+		ShowMessage(pTargetVehicle->GetVehicleName());
 	}
 	else if (pTargetItem) {
-		ShowPickupMessage(pTargetItem->GetItemName());
+		ShowMessage(pTargetItem->GetItemName());
 	}
 }
 
-void CPlayerComponent::ShowPickupMessage(string itemName) {
+void CPlayerComponent::ShowMessage(string name) {
 
 	Vec2 screenMid = { gEnv->pRenderer->GetWidth() / 2.f, gEnv->pRenderer->GetHeight() / 2.f };
 	ColorF pfWhite = { 1.f, 1.f, 1.f, 1.f };
-	string sPickupMessage = "Pick up " + itemName;
-	gEnv->pRenderer->GetIRenderAuxGeom()->Draw2dLabel(screenMid.x, screenMid.y, 1.5f, pfWhite, true, sPickupMessage);
+	string sPickupMessage = "Pick up " + name;
+	string sVehicleMessage = "Enter " + name;
+
+	//If it's a vehicle, continue
+	if (pTargetVehicle) {
+		gEnv->pRenderer->GetIRenderAuxGeom()->Draw2dLabel(screenMid.x, screenMid.y, 1.5f, pfWhite, true, sVehicleMessage);
+	}
+	//else, continue
+	else {
+		gEnv->pRenderer->GetIRenderAuxGeom()->Draw2dLabel(screenMid.x, screenMid.y, 1.5f, pfWhite, true, sPickupMessage);
+	}
 }

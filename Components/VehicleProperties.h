@@ -79,9 +79,11 @@ struct SVehicleProperties {
 	EVehicleType eVehicleType;
 
 	int iMaxPassengers;
+	float fMaxVelocity;
+	Vec3 vDriversSeat;
 
 	//Non-editor
-	string sItemName;
+	string sVehicleName;
 };
 
 static void ReflectType(Schematyc::CTypeDesc<SVehicleProperties>& desc) {
@@ -93,5 +95,7 @@ static void ReflectType(Schematyc::CTypeDesc<SVehicleProperties>& desc) {
 	desc.AddMember(&SVehicleProperties::sPhysicsProperties, 'phy', "PhysicsProperties", "Physics Properties", "All the physics settings for current vehicle", SVehiclePhysicsProperties());
 	desc.AddMember(&SVehicleProperties::eVehicleType, 'evt', "VehicleType", "Vehicle Type", "Sets the vehicles type", EVehicleType());
 	desc.AddMember(&SVehicleProperties::iMaxPassengers, 'mps', "MaxPassengers", "Max Passengers", "Sets the max amount of passengers the vehicle can carry", 0);
+	desc.AddMember(&SVehicleProperties::fMaxVelocity, 'fmv', "MaxVelocity", "Max Velocity", "Sets the max velocity of the vehicle", 0.f);
+	desc.AddMember(&SVehicleProperties::vDriversSeat, 'vds', "DriversSeat", "Drivers Seat", "Sets location of the drivers seat", 0, 0, 0);
 
 }

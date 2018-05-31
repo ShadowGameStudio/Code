@@ -18,10 +18,12 @@ class CVehicleComponent : public IEntityComponent {
 
 		EntityId PassId;
 		EntityId VecId;
+		int channelId;
 
 		void SerializeWith(TSerialize ser) {
 			ser.Value("PassId", PassId, 'eid');
 			ser.Value("VecId", VecId, 'eid');
+			ser.Value("channelId", channelId, 'ui16');
 		}
 
 	};
@@ -30,10 +32,12 @@ class CVehicleComponent : public IEntityComponent {
 		
 		EntityId PassId;
 		EntityId VecId;
+		int channelId;
 		
 		void SerializeWith(TSerialize ser) {
 			ser.Value("PassId", PassId, 'eid');
 			ser.Value("VecId", VecId, 'eid');
+			ser.Value("channelId", channelId, 'ui16');
 		}
 	};
 
@@ -62,10 +66,12 @@ public:
   void RequestLeave(IEntity *pPassenger, IEntity *pVehicle);
 
   SVehicleProperties *GetProperties() { return &sVehicleProperties; }
-  string GetItemName() { return GetProperties()->sItemName; }
+  string GetVehicleName() { return GetProperties()->sVehicleName; }
   EVehicleType GetVehicleType() { return GetProperties()->eVehicleType; }
 
   int GetMaxPassengers() { return GetProperties()->iMaxPassengers; }
+
+  void CreateVehicleName();
 
 
 protected:
