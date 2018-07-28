@@ -12,6 +12,7 @@
 #include <DefaultComponents/Physics/CharacterControllerComponent.h>
 #include <DefaultComponents/Geometry/AdvancedAnimationComponent.h>
 #include <DefaultComponents/Input/InputComponent.h>
+
 #include "InventoryComponent.h"
 #include "HealthpackComponent.h"
 #include "HealthComponent.h"
@@ -97,8 +98,6 @@ class CPlayerComponent final : public IEntityComponent
 		T m_accumulator;
 	};
 
-	const EEntityAspects kInputAspect = eEA_GameClientD;
-
 public:
 	CPlayerComponent() = default;
 	virtual ~CPlayerComponent() {}
@@ -122,11 +121,16 @@ public:
 
 	void FreezePlayer(bool freeze) { bFreezePlayer = freeze; }
 	void AttachToBack(SItemComponent *pWeaponToAttach, int slotId);
+	bool GroundCheck();
 
 	//Network functions, vars
+
+
+	const EEntityAspects kInputAspect = eEA_GameClientD;
+
 	void LocalPlayerInitialize();
 	virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) override;
-	virtual NetworkAspectType GetNetSerializeAspectMask() const { return kInputAspect; }
+	virtual NetworkAspectType GetNetSerializeAspectMask() const override { return kInputAspect | eEA_Physics; };
 	//RMI
 	//Vars
 	//
@@ -134,6 +138,11 @@ public:
 	bool bPlayerIsWearingGasmask = false;
 	bool bCanTakeInfectedDamage = true;
 	bool bPlayerHasBackpack = false;
+
+	bool bIsDriver = false;
+	bool bIsPassenger = false;
+
+	IEntity *pPlayerVehicle = nullptr;
 
 	Vec3 GetViewWorldDirection();
 

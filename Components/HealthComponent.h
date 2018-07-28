@@ -14,6 +14,7 @@ class CHealthComponent : public SVitalStatusComponent {
 
 public:
 	CHealthComponent() = default;
+	~CHealthComponent() = default;
 
 	virtual void InitializeClass() override;
 	virtual void ProcessClassEvent(const SEntityEvent& event) override;

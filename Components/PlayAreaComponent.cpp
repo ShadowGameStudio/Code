@@ -2,6 +2,10 @@
 #include "PlayAreaComponent.h"
 #include "PlayAreaSpawnerComponent.h"
 #include "SpawnPoint.h"
+#include <CryEntitySystem/IEntitySystem.h>
+#include <CryNetwork/Rmi.h>
+
+using ClDamagePlayerRMI = SRmi<RMI_WRAP(&CPlayAreaComponent::ClDamagePlayer)>;
 
 static void RegisterPlayAreaComponent(Schematyc::IEnvRegistrar& registrar) {
 	Schematyc::CEnvRegistrationScope scope = registrar.Scope(IEntity::GetEntityScopeGUID());
@@ -16,6 +20,15 @@ static void RegisterPlayAreaComponent(Schematyc::IEnvRegistrar& registrar) {
 CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterPlayAreaComponent)
 
 void CPlayAreaComponent::Initialize() {
+
+	//ClDamagePlayerRMI
+	{
+		const bool bIsServerCall = false;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableUnordered;
+
+		ClDamagePlayerRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	}
 
 	//Binds the entity to the network
 	m_pEntity->GetNetEntity()->BindToNetwork();
@@ -64,6 +77,18 @@ void CPlayAreaComponent::ProcessEvent(const SEntityEvent & event) {
 
 		}
 
+		if (event.nParam[0] == Timer_Damage) {
+
+			bTimerDamageSet = false;
+
+			int channelId = pPlayerToDamage->GetNetEntity()->GetChannelId();
+			EntityId Id = pPlayerToDamage->GetId();
+
+			ClDamagePlayerRMI::InvokeOnClient(this, SDamageParams{ Id }, channelId);
+
+
+		}
+
 		break;
 
 	case ENTITY_EVENT_LEVEL_LOADED:
@@ -90,6 +115,34 @@ void CPlayAreaComponent::ReflectType(Schematyc::CTypeDesc<CPlayAreaComponent>& d
 	desc.SetComponentFlags({ IEntityComponent::EFlags::Transform, IEntityComponent::EFlags::Socket, IEntityComponent::EFlags::Attach });
 
 
+}
+
+void CPlayAreaComponent::DamagePlayer(IEntity* pPlayer) {
+
+	//If player is not in area
+	if (pPlayer) {
+
+		if (!bTimerDamageSet) {
+			m_pEntity->SetTimer(Timer_Damage, 1000);
+			pPlayerToDamage = pPlayer;
+			bTimerDamageSet = true;
+		}
+
+	}
+
+}
+
+bool CPlayAreaComponent::ClDamagePlayer(SDamageParams && p, INetChannel * pNetChannel) {
+
+	IEntity* pPlayer = gEnv->pEntitySystem->GetEntity(p.Id);
+
+	if (CHealthComponent* pHealth = pPlayer->GetComponent<CHealthComponent>()) {
+
+		pHealth->Add((-10.f));
+
+	}
+
+	return true;
 }
 
 //Makes the play area smaller over time
@@ -119,3 +172,4 @@ void CPlayAreaComponent::Update(float frameTime) {
 	}
 
 }
+

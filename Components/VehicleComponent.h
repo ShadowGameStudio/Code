@@ -18,7 +18,7 @@ class CVehicleComponent : public IEntityComponent {
 
 		EntityId PassId;
 		EntityId VecId;
-		int channelId;
+		uint16 channelId;
 
 		void SerializeWith(TSerialize ser) {
 			ser.Value("PassId", PassId, 'eid');
@@ -37,7 +37,6 @@ class CVehicleComponent : public IEntityComponent {
 		void SerializeWith(TSerialize ser) {
 			ser.Value("PassId", PassId, 'eid');
 			ser.Value("VecId", VecId, 'eid');
-			ser.Value("channelId", channelId, 'ui16');
 		}
 	};
 
@@ -49,17 +48,14 @@ public:
   virtual void ProcessEvent(const SEntityEvent &event) override;
   static void ReflectType(Schematyc::CTypeDesc<CVehicleComponent> &desc);
 
-  void LoadGeometry();
-  void Physicalize();
-
   //Network
   //Client
-  bool ClEnterVehicle(SEnterParams && p, INetChannel *pNetChannel);
-  bool ClLeaveVehicle(SLeaveParams && p, INetChannel *pNetChannel);
 
   //Server
   bool SvEnterVehicle(SEnterParams && p, INetChannel *pNetChannel);
   bool SvLeaveVehicle(SLeaveParams && p, INetChannel *pNetChannel);
+
+  void DelegateAuthorityToClient(const EntityId controlledEntity, const uint16 channelId);
   //Network
 
   void RequestEnter(IEntity *pNewPassenger, IEntity *pVehicle);
@@ -67,12 +63,17 @@ public:
 
   SVehicleProperties *GetProperties() { return &sVehicleProperties; }
   string GetVehicleName() { return GetProperties()->sVehicleName; }
+  float GetVehicleSpeed() { return GetProperties()->fVehicleSpeed; }
   EVehicleType GetVehicleType() { return GetProperties()->eVehicleType; }
 
   int GetMaxPassengers() { return GetProperties()->iMaxPassengers; }
 
   void CreateVehicleName();
 
+  const EEntityAspects kDriveAspect = eEA_GameClientC;
+
+  virtual bool NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) override;
+  virtual NetworkAspectType GetNetSerializeAspectMask() const override { return kDriveAspect | eEA_Physics; };
 
 protected:
   SVehicleProperties sVehicleProperties, sPrevVehicleProperties;

@@ -2,10 +2,11 @@
 
 #include "VehicleComponent.h"
 #include <CryEntitySystem/IEntitySystem.h>
+#include <DefaultComponents/Physics/Vehicles/VehicleComponent.h>
 
 //Network shorts
 using SvEnterVehicleRMI = SRmi<RMI_WRAP(&CVehicleComponent::SvEnterVehicle)>;
-using ClEnterVehicleRMI = SRmi<RMI_WRAP(&CVehicleComponent::ClEnterVehicle)>;
+using SvLeaveVehicleRMI = SRmi<RMI_WRAP(&CVehicleComponent::SvLeaveVehicle)>;
 
 
 static void RegisterVehicleComponent(Schematyc::IEnvRegistrar &registrar) {
@@ -21,9 +22,7 @@ static void RegisterVehicleComponent(Schematyc::IEnvRegistrar &registrar) {
 CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterVehicleComponent);
 
 void CVehicleComponent::Initialize() { 
-    
-	LoadGeometry();
-	Physicalize();
+   
 	CreateVehicleName();
 
 	//Enter RMI(Server)
@@ -35,17 +34,20 @@ void CVehicleComponent::Initialize() {
 		SvEnterVehicleRMI::Register(this, attachmentType, bIsServerCall, reliability);
 
 	}
-	//Enter RMI(Client)
-	{
-		const bool bIsServerCall = false;
-		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
-		const ENetReliabilityType reliability = eNRT_UnreliableOrdered; 
 
-		ClEnterVehicleRMI::Register(this, attachmentType, bIsServerCall, reliability);
+	//Leave RMI(Server)
+	{
+		const bool bIsServerCall = true;
+		const ERMIAttachmentType attachmentType = eRAT_NoAttach;
+		const ENetReliabilityType reliability = eNRT_UnreliableOrdered;
+
+		SvLeaveVehicleRMI::Register(this, attachmentType, bIsServerCall, reliability);
 
 	}
+	
 	//Enables the item to have it's aspects delegated
 	m_pEntity->GetNetEntity()->EnableDelegatableAspect(GetNetSerializeAspectMask(), true);
+	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
 	//If it's server, continue
 	if (gEnv->bServer) {
 		//Binds the object to the server
@@ -64,15 +66,6 @@ void CVehicleComponent::ProcessEvent(const SEntityEvent &event) {
 		case ENTITY_EVENT_COMPONENT_PROPERTY_CHANGED:
 		{
 
-			if (sVehicleProperties != sPrevVehicleProperties) {
-				
-				sPrevVehicleProperties = sVehicleProperties;
-
-				LoadGeometry();
-				Physicalize();
-
-			}
-
 		}
 	
 	}
@@ -88,34 +81,6 @@ void CVehicleComponent::ReflectType(Schematyc::CTypeDesc<CVehicleComponent> &des
 	desc.AddMember(&CVehicleComponent::sVehicleProperties, 'svp', "VehicleProperties", "Vehicle Properties", "Sets all of the vehicle properties", SVehicleProperties());
 
 
-}
-
-void CVehicleComponent::LoadGeometry() {
-
-	string sGeomPath = GetProperties()->sRenderProperties.sGeomPath.value.c_str();
-
-	if (sGeomPath.empty())
-		return;
-
-	m_pEntity->LoadGeometry(0, sGeomPath);
-
-}
-void CVehicleComponent::Physicalize() {
-
-	SEntityPhysicalizeParams physParams;
-
-	physParams.mass = GetProperties()->sPhysicsProperties.fMass;
-	physParams.type = PE_WHEELEDVEHICLE;
-	m_pEntity->Physicalize(physParams);
-
-}
-
-bool CVehicleComponent::ClEnterVehicle(SEnterParams && p, INetChannel * pNetChannel) {
-	return true;
-}
-
-bool CVehicleComponent::ClLeaveVehicle(SLeaveParams && p, INetChannel * pNetChannel) {
-	return true;
 }
 
 bool CVehicleComponent::SvEnterVehicle(SEnterParams && p, INetChannel * pNetChannel) {
@@ -139,6 +104,7 @@ bool CVehicleComponent::SvEnterVehicle(SEnterParams && p, INetChannel * pNetChan
 				Vec3 vehiclePos = pVehicle->GetWorldTM().GetTranslation();
 				Vec3 driverSeat = vehiclePos + GetProperties()->vDriversSeat;
 
+				//Sets the players position to the driver seat
 				pPlayer->SetPos(driverSeat);
 
 				//Adds the new player to the count
@@ -146,8 +112,18 @@ bool CVehicleComponent::SvEnterVehicle(SEnterParams && p, INetChannel * pNetChan
 				//Sets that it now has a driver.
 				pVehicleComponent->bHasDriver = true;
 
-				//Pass it on to the client
-				ClEnterVehicleRMI::InvokeOnClient(this, SEnterParams{ p.PassId, p.VecId, p.channelId }, p.channelId);
+				//Get the players PlayerComponent
+				if (CPlayerComponent *pPlayerComp = pPlayer->GetComponent<CPlayerComponent>()) {
+
+					//Set that the player now is in a vehicle
+					pPlayerComp->bIsDriver = true;
+					pPlayerComp->bIsPassenger = false;
+
+					pPlayerComp->pPlayerVehicle = m_pEntity;
+
+					DelegateAuthorityToClient(p.VecId, p.channelId);
+
+				}
 
 			}
 			else {
@@ -156,8 +132,6 @@ bool CVehicleComponent::SvEnterVehicle(SEnterParams && p, INetChannel * pNetChan
 
 				//Adds the new player to the count
 				pVehicleComponent->iCurrentPassengers++;
-
-				ClEnterVehicleRMI::InvokeOnClient(this, SEnterParams{ p.PassId, p.VecId, p.channelId }, p.channelId);
 
 			}
 
@@ -179,26 +153,81 @@ bool CVehicleComponent::SvEnterVehicle(SEnterParams && p, INetChannel * pNetChan
 }
 
 bool CVehicleComponent::SvLeaveVehicle(SLeaveParams && p, INetChannel * pNetChannel) {
+
+	//Get the vehicle
+	IEntity *pVehicle = gEnv->pEntitySystem->GetEntity(p.VecId);
+
+	//Get the vehicle component
+	if (CVehicleComponent *pVehicleComp = pVehicle->GetComponent<CVehicleComponent>()) {
+	
+		//Get the player entity
+		IEntity *pPlayer = gEnv->pEntitySystem->GetEntity(p.PassId);
+
+		//Get vehicle pos
+		Vec3 vehiclePos = pVehicle->GetWorldTM().GetTranslation();
+		Vec3 dropLoc = vehiclePos + Vec3(3, 0, 0);
+
+		//Set the players position to outside the vehicle
+		pPlayer->SetPos(dropLoc);
+
+		//Adds the new player to the count
+		pVehicleComp->iCurrentPassengers--;
+		//Sets that it now has a driver.
+		pVehicleComp->bHasDriver = false;
+
+		if (CPlayerComponent *pPlayerComp = pPlayer->GetComponent<CPlayerComponent>()) {
+
+			//Set that the player now is in a vehicle
+			pPlayerComp->bIsDriver = false;
+			pPlayerComp->bIsPassenger = false;
+
+			pPlayerComp->pPlayerVehicle = nullptr;
+
+		}
+
+	}
+
 	return false;
+}
+
+void CVehicleComponent::DelegateAuthorityToClient(const EntityId controlledEntity, const uint16 channelId) {
+
+	INetChannel* pNetChannel = gEnv->pGameFramework->GetNetChannel(channelId);
+	gEnv->pGameFramework->GetNetContext()->DelegateAuthority(controlledEntity, pNetChannel);
+
 }
 
 void CVehicleComponent::RequestEnter(IEntity *pNewPassenger, IEntity *pVehicle) {
 
-	//If it's not server, continue
-	if (!gEnv->bServer) {
-		//Gets the new passengers EntityId
-		EntityId PassId = pNewPassenger->GetId();
-		EntityId VecId = pVehicle->GetId();
-		int channelId = pNewPassenger->GetNetEntity()->GetChannelId();
-		//Sends a request to the server
-		SvEnterVehicleRMI::InvokeOnServer(this, SEnterParams{ PassId, VecId, channelId });
-	
-	}
+	if (CPlayerComponent *pPlayer = pNewPassenger->GetComponent<CPlayerComponent>()) {
 
+		if (pPlayer->bIsDriver || pPlayer->bIsPassenger) {
+
+			RequestLeave(pNewPassenger, pVehicle);
+
+		}
+		else {
+
+			//Gets the new passengers EntityId
+			EntityId PassId = pNewPassenger->GetId();
+			EntityId VecId = pVehicle->GetId();
+			int channelId = pNewPassenger->GetNetEntity()->GetChannelId();
+			//Sends a request to the server
+			SvEnterVehicleRMI::InvokeOnServer(this, SEnterParams{ PassId, VecId, channelId });
+
+		}
+
+	}
 
 }
 
 void CVehicleComponent::RequestLeave(IEntity *pPassenger, IEntity *pVehicle) {
+
+	EntityId PassId = pPassenger->GetId();
+	EntityId VecId = pVehicle->GetId();
+
+	SvLeaveVehicleRMI::InvokeOnServer(this, SLeaveParams{ PassId, VecId });
+
 }
 
 void CVehicleComponent::CreateVehicleName() {
@@ -211,4 +240,8 @@ void CVehicleComponent::CreateVehicleName() {
 	sFirst.MakeUpper();
 	sLongName.erase(0, 1);
 	GetProperties()->sVehicleName = sFirst + sLongName;
+}
+
+bool CVehicleComponent::NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) {
+	return false;
 }

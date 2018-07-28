@@ -5,6 +5,8 @@
 #include "HealthpackComponent.h"
 #include "PlayAreaComponent.h"
 #include "WeaponComponent.h"
+#include "VehicleComponent.h"
+
 
 void CPlayerComponent::InitializeInput() {
 
@@ -103,40 +105,68 @@ void CPlayerComponent::HandleInputFlagChange(TInputFlags flags, int activationMo
 	break;
 	}
 
-	if (!gEnv->bServer) {
-		NetMarkAspectsDirty(kInputAspect);
+	if (bIsDriver) {
+		// Input is replicated from the client to the server.
+		if (m_pEntity->GetFlags() & ENTITY_FLAG_LOCAL_PLAYER) {
+			NetMarkAspectsDirty(kDriveAspect);
+		}
+	}
+	else {
+		// Input is replicated from the client to the server.
+		if (m_pEntity->GetFlags() & ENTITY_FLAG_LOCAL_PLAYER) {
+			NetMarkAspectsDirty(kInputAspect);
+		}
 	}
 
 }
 
 bool CPlayerComponent::NetSerialize(TSerialize ser, EEntityAspects aspect, uint8 profile, int flags) {
-
 	if (aspect == kInputAspect) {
 		ser.BeginGroup("PlayerInput");
 
-		auto inputs = m_inputFlags;
-		auto prevState = m_inputFlags;
+		const TInputFlags prevInputFlags = m_inputFlags;
 
 		ser.Value("m_inputFlags", m_inputFlags, 'ui8');
 
 		if (ser.IsReading()) {
+			const TInputFlags changedKeys = prevInputFlags ^ m_inputFlags;
 
-			auto changedKeys = inputs ^ m_inputFlags;
-
-			auto pressedKeys = changedKeys & inputs;
+			const TInputFlags pressedKeys = changedKeys & prevInputFlags;
 			if (pressedKeys != 0) {
 				HandleInputFlagChange(pressedKeys, eIS_Pressed);
 			}
 
-			auto releasedKeys = changedKeys & prevState;
+			const TInputFlags releasedKeys = changedKeys & prevInputFlags;
 			if (releasedKeys != 0) {
 				HandleInputFlagChange(pressedKeys, eIS_Released);
 			}
 		}
 
+		// Serialize the player look orientation
 		ser.Value("m_lookOrientation", m_lookOrientation, 'ori3');
-		ser.EndGroup();
 
+		ser.EndGroup();
+	}
+	else if (aspect == eEA_Physics) {
+		// Determine the physics type used by the remote side
+		pe_type remotePhysicsType = static_cast<pe_type>(profile);
+
+		// Nothing can be serialized if we are not physicalized
+		if (remotePhysicsType == PE_NONE)
+			return true;
+
+		if (ser.IsWriting()) {
+			// If the remote physics type does not match our local state, serialize a dummy snapshot
+			// Note that this might indicate a game code error, please ensure that the remote and local states match
+			IPhysicalEntity* pPhysicalEntity = m_pEntity->GetPhysicalEntity();
+			if (pPhysicalEntity == nullptr || pPhysicalEntity->GetType() != remotePhysicsType) {
+				gEnv->pPhysicalWorld->SerializeGarbageTypedSnapshot(ser, remotePhysicsType, 0);
+				return true;
+			}
+		}
+
+		// Serialize physics state in order to keep the clients in sync
+		m_pEntity->PhysicsNetSerializeTyped(ser, remotePhysicsType, flags);
 	}
 
 	return true;

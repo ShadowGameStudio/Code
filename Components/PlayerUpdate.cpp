@@ -1,52 +1,92 @@
 #include "StdAfx.h"
 #include "Player.h"
 #include "ItemComponent.h"
+#include "DefaultComponents/Physics/Vehicles/VehicleComponent.h"
 
 #define MOUSE_DELTA_TRESHOLD 0.0001f
 #define PICKUP_RANGE 0.5f
 
 void CPlayerComponent::UpdateMovementRequest(float frameTime) {
-	// Don't handle input if we are in air
-	if (!m_pCharacterController->IsOnGround())
-		return;
+	
+	if (bIsDriver) {
 
-	Vec3 velocity = ZERO;
+		Vec3 velocity = ZERO;
 
-	float moveSpeed = 20.5f;
-	float sprintSpeed = 200.f;
-	const float mainSpeed = 20.5f;
-	const float fSprintCostRatio = 1.f;
+		if (CVehicleComponent *pVehicle = pPlayerVehicle->GetComponent<CVehicleComponent>()) {
 
-	if (m_inputFlags & (TInputFlags)EInputFlag::MoveJump) {
-		jumpVel = 200.f;
-		velocity.z += jumpVel * frameTime;
-	}
-	if (m_inputFlags & (TInputFlags)EInputFlag::MoveLeft) {
-		velocity.x -= mainSpeed * frameTime;
-	}
-	if (m_inputFlags & (TInputFlags)EInputFlag::MoveRight) {
-		velocity.x += mainSpeed * frameTime;
-	}
-	if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
+			float fVehicleSpeed = pVehicle->GetVehicleSpeed();
 
-		if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
-			//Set move speed to sprint speed if shift is pressed	
-			moveSpeed = sprintSpeed;
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveLeft) {
+				velocity.x -= fVehicleSpeed * frameTime;
+			}
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveRight) {
+				velocity.x += fVehicleSpeed * frameTime;
+			}
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
+				velocity.y += fVehicleSpeed * frameTime;
+			}
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveBack) {
+				velocity.y -= fVehicleSpeed * frameTime;
+			}
+
+			if (Cry::DefaultComponents::CVehiclePhysicsComponent *pVehiclePhys = pPlayerVehicle->GetComponent<Cry::DefaultComponents::CVehiclePhysicsComponent>()) {
+
+				pVehiclePhys->SetCurrentGear(1);
+				pVehiclePhys->SetVelocity(velocity);
+
+			}
+
 		}
 
-		velocity.y += moveSpeed * frameTime;
 	}
-	if (m_inputFlags & (TInputFlags)EInputFlag::MoveBack) {
-		velocity.y -= mainSpeed * frameTime;
+	else if (bIsPassenger) {
 
-		if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
+	}
+	else if (!bIsDriver) {
 
-			m_inputFlags &= ~(TInputFlags)EInputFlag::MoveSprint;
-			velocity.y = 0.f;
+		if (GroundCheck()) {
+
+			Vec3 velocity = ZERO;
+
+			float moveSpeed = 20.5f;
+			float sprintSpeed = 200.f;
+			const float mainSpeed = 20.5f;
+			const float fSprintCostRatio = 1.f;
+
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveJump) {
+				jumpVel = 100.f;
+				velocity.z += jumpVel * frameTime;
+			}
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveLeft) {
+				velocity.x -= mainSpeed * frameTime;
+			}
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveRight) {
+				velocity.x += mainSpeed * frameTime;
+			}
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
+
+				if (m_inputFlags & (TInputFlags)EInputFlag::MoveSprint) {
+					//Set move speed to sprint speed if shift is pressed	
+					moveSpeed = sprintSpeed;
+				}
+
+				velocity.y += moveSpeed * frameTime;
+			}
+			if (m_inputFlags & (TInputFlags)EInputFlag::MoveBack) {
+				velocity.y -= mainSpeed * frameTime;
+
+				if (m_inputFlags & (TInputFlags)EInputFlag::MoveForward) {
+
+					m_inputFlags &= ~(TInputFlags)EInputFlag::MoveSprint;
+					velocity.y = 0.f;
+				}
+			}
+
+			m_pCharacterController->AddVelocity(GetEntity()->GetWorldRotation() * velocity);
+
 		}
-	}
 
-	m_pCharacterController->AddVelocity(GetEntity()->GetWorldRotation() * velocity);
+	}
 }
 
 void CPlayerComponent::UpdateLookDirectionRequest(float frameTime) {
@@ -179,7 +219,7 @@ void CPlayerComponent::Update(float frameTime) {
 	Vec3 pickupOrigin = m_pEntity->GetWorldPos() + (m_pEntity->GetForwardDir() * PICKUP_RANGE);
 	IPhysicalEntity **pEntityList = NULL;
 	int num = gEnv->pEntitySystem->GetPhysicalEntitiesInBox(pickupOrigin, PICKUP_RANGE, pEntityList);
-	float lastDist = 100.f;
+	float lastDist = 10.f;
 	float curDist = 0.f;
 	SItemComponent *pNewItem = nullptr;
 	CVehicleComponent *pNewVehicle = nullptr;
