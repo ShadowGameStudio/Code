@@ -211,7 +211,7 @@ void CVehicleComponent::RequestEnter(IEntity *pNewPassenger, IEntity *pVehicle) 
 			//Gets the new passengers EntityId
 			EntityId PassId = pNewPassenger->GetId();
 			EntityId VecId = pVehicle->GetId();
-			int channelId = pNewPassenger->GetNetEntity()->GetChannelId();
+			uint16 channelId = pNewPassenger->GetNetEntity()->GetChannelId();
 			//Sends a request to the server
 			SvEnterVehicleRMI::InvokeOnServer(this, SEnterParams{ PassId, VecId, channelId });
 

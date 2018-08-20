@@ -23,7 +23,7 @@ add_sources("Code_uber.cpp"
 )
 add_sources("Components_uber.cpp"
     PROJECTS Game
-	    SOURCE_GROUP "Components"
+		SOURCE_GROUP "Components"
 		"Components/SpawnPoint.cpp"
 		"Components/SpawnPoint.h"
 		SOURCE_GROUP "Components\\\\AI"
@@ -84,7 +84,7 @@ add_sources("Components_uber.cpp"
         SOURCE_GROUP "Components\\\\Gameplay\\\\Vehicle"
         "Components/VehicleComponent.cpp"
         "Components/VehicleComponent.h"
-        "Components/VehicleProperties.h"
+"Components/VehicleProperties.h"
 )
 
 end_sources()

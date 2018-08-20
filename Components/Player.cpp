@@ -74,10 +74,6 @@ void CPlayerComponent::Initialize()
 
 	m_pEntity->GetNetEntity()->EnableDelegatableAspect(eEA_Physics, false);
 
-	SEntityPhysicalizeParams sPhys = m_pCharacterController->GetPhysParams();
-
-	m_pEntity->GetNetEntity()->SetAspectProfile(eEA_Physics, sPhys.type);
-
 	bIsInitialized = true;
 }
 

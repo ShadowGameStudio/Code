@@ -108,7 +108,6 @@ void CPlayerComponent::HandleInputFlagChange(TInputFlags flags, int activationMo
 	if (bIsDriver) {
 		// Input is replicated from the client to the server.
 		if (m_pEntity->GetFlags() & ENTITY_FLAG_LOCAL_PLAYER) {
-			NetMarkAspectsDirty(kDriveAspect);
 		}
 	}
 	else {
