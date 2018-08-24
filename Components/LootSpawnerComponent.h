@@ -34,11 +34,11 @@ class CLootSpawnerComponent : public IEntityComponent {
 public:
 
 	//arrays
-	std::vector<string> sCommonClasses = { "schematyc::items::test" };
-	std::vector<string> sUncommonClasses = { "schematyc::items::Backpack" };
-	std::vector<string> sRareClasses = { "test2" };
-	std::vector<string> sRarerClasses = { "test3" };
-	std::vector<string> sURareClasses = { "test4" };
+	std::vector<XmlString> sCommonClasses = { "schematyc::items::test" };
+	std::vector<XmlString> sUncommonClasses = { "schematyc::items::Backpack" };
+	std::vector<XmlString> sRareClasses = {};
+	std::vector<XmlString> sRarerClasses = {};
+	std::vector<XmlString> sURareClasses = {};
 	//~arrays
 
 	CLootSpawnerComponent() = default;
@@ -52,6 +52,8 @@ public:
 	void SpawnItem();
 	void GetRandomClass(int *classAmount, int *rarityType);
 	void GetRandomRarity(int itemLevel);
+
+	void GetModelsFromXML();
 
 	int sCommonClassAmount = sCommonClasses.size();
 	int sUncommonClassAmount = sUncommonClasses.size();

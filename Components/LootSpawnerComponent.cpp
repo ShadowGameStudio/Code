@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "LootSpawnerComponent.h"
+#include <CrySystem/ISystem.h>
 
 static void RegisterLootSpawnerComponent(Schematyc::IEnvRegistrar& registrar) {
 	Schematyc::CEnvRegistrationScope scope = registrar.Scope(IEntity::GetEntityScopeGUID());
@@ -120,6 +121,7 @@ void CLootSpawnerComponent::GetRandomRarity(int itemLevel) {
 				pLootClassAmount = &sCommonClassAmount;
 				//Set the rarity type to one
 				iRarityType = 1;
+				GetModelsFromXML();
 			}
 			else if (iRandRarity == 1) {
 				pLootClassAmount = &sUncommonClassAmount;
@@ -159,5 +161,75 @@ void CLootSpawnerComponent::GetRandomRarity(int itemLevel) {
 
 	//Get the random class from
 	GetRandomClass(pLootClassAmount, pRarityType);
+
+}
+
+void CLootSpawnerComponent::GetModelsFromXML() {
+
+	//Get the rootNode from an XML file
+	if (XmlNodeRef rootNode = gEnv->pSystem->LoadXmlFromFile("LootXML.xml", false)) {
+
+		//Get every child of the rootNode
+		for (int i = 0, n = rootNode->getChildCount(); i < n; i++) {
+
+			//Get the child
+			XmlNodeRef childNode = rootNode->getChild(i);
+			int rarity = 0;
+
+			//Get the rarity attribute
+			if (childNode->getAttr("rarity", rarity)) {
+
+				//If the rarity is 1, continue
+				if (rarity == 1) {
+					XmlString path;
+					//Get the path
+					if (childNode->getAttr("modelPath", path)) {
+						//Add the path to the correct vector
+						sCommonClasses.push_back(path);
+					}
+
+				}
+				//If the rarity is 2, continue
+				else if (rarity == 2) {
+					XmlString path;
+					//Get the path
+					if (childNode->getAttr("modelPath", path)) {
+						//Add the path to the correct vector
+						sUncommonClasses.push_back(path);
+					}
+				}
+				//If the rarity is 3, continue
+				else if (rarity == 3) {
+					XmlString path;
+					//Get the path
+					if (childNode->getAttr("modelPath", path)) {
+						//Add the path to the correct vector
+						sRareClasses.push_back(path);
+					}
+				}
+				//If the rarity is 4, continue
+				else if (rarity == 4) {
+					XmlString path;
+					//Get the path
+					if (childNode->getAttr("modelPath", path)) {
+						//Add the path to the correct vector
+						sRarerClasses.push_back(path);
+					}
+				}
+				//If the rarity is 5, continue
+				else if (rarity == 5) {
+					XmlString path;
+					//Gets the path
+					if (childNode->getAttr("modelPath", path)) {
+						//Add the path to the correct vector
+						sURareClasses.push_back(path);
+					}
+				}
+
+			}
+
+		}
+
+	}
 
 }
