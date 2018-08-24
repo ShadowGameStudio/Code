@@ -54,7 +54,6 @@ public:
 	void GetRandomRarity(int itemLevel);
 
 	void GetModelsFromXML();
-	void GetSpawnPositionsFromXML();
 
 	int sCommonClassAmount = sCommonClasses.size();
 	int sUncommonClassAmount = sUncommonClasses.size();
@@ -72,6 +71,5 @@ public:
 protected:
 
 	SLootSpawnerProperties sLootSpawnerProperties;
-	std::vector<Vec3> SpawnPositions = {};
 
 };
