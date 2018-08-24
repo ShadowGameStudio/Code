@@ -19,6 +19,8 @@ void CLootSpawnerComponent::Initialize() {
 
 	//Gets all of the models to spawn at the start
 	GetModelsFromXML();
+	//Gets all of the spawn positions from the xml file
+	GetSpawnPositionsFromXML();
 
 }
 
@@ -72,8 +74,8 @@ void CLootSpawnerComponent::SpawnItem() {
 
 		spawnParams.pClass = pItemClass;
 		spawnParams.sName = sName;
-		spawnParams.vPosition = Vec3(574, 516, 34);
-		spawnParams.vScale = Vec3(10, 10, 10);
+		spawnParams.vPosition = SpawnPositions[1];
+		spawnParams.vScale = Vec3(1, 1, 1);
 
 		//Spawning item
 		if (IEntity* pEntity = gEnv->pEntitySystem->SpawnEntity(spawnParams))
@@ -169,6 +171,7 @@ void CLootSpawnerComponent::GetRandomRarity(int itemLevel) {
 
 }
 
+//Get the loot models
 void CLootSpawnerComponent::GetModelsFromXML() {
 
 	//Get the rootNode from an XML file
@@ -262,6 +265,31 @@ void CLootSpawnerComponent::GetModelsFromXML() {
 					}
 				}
 
+			}
+
+		}
+
+	}
+
+}
+
+//Get the spawn positions
+void CLootSpawnerComponent::GetSpawnPositionsFromXML() {
+
+	//Get the root node from te xml file
+	if (XmlNodeRef rootNode = gEnv->pSystem->LoadXmlFromFile("SpawnPositionsXML.xml", false)) {
+
+		//Get every child of the root node
+		for (int i = 0, n = rootNode->getChildCount(); i < n; i++) {
+
+			//Get the child
+			XmlNodeRef childNode = rootNode->getChild(i);
+			Vec3 spawnPos;
+
+			//Get the spawnPositions attribute
+			if (childNode->getAttr("spawnPosition", spawnPos)) {
+				//Add the position to the vector
+				SpawnPositions.push_back(spawnPos);
 			}
 
 		}
