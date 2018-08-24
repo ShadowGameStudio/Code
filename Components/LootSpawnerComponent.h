@@ -34,8 +34,8 @@ class CLootSpawnerComponent : public IEntityComponent {
 public:
 
 	//arrays
-	std::vector<XmlString> sCommonClasses = { "schematyc::items::test" };
-	std::vector<XmlString> sUncommonClasses = { "schematyc::items::Backpack" };
+	std::vector<XmlString> sCommonClasses = {};
+	std::vector<XmlString> sUncommonClasses = {};
 	std::vector<XmlString> sRareClasses = {};
 	std::vector<XmlString> sRarerClasses = {};
 	std::vector<XmlString> sURareClasses = {};
@@ -64,6 +64,7 @@ public:
 	//Int that will be used to pass the amount of classes in the specified vector 
 	int *pLootClassAmount = nullptr;
 	string sClass = "";
+	XmlString sName = "";
 
 	bool bIsSpawned = false;
 

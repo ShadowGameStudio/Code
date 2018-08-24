@@ -71,7 +71,7 @@ void CLootSpawnerComponent::SpawnItem() {
 		IEntityClass *pItemClass = gEnv->pEntitySystem->GetClassRegistry()->FindClass(sClass);
 
 		spawnParams.pClass = pItemClass;
-		spawnParams.sName = "test";
+		spawnParams.sName = sName;
 		spawnParams.vPosition = Vec3(574, 516, 34);
 		spawnParams.vScale = Vec3(10, 10, 10);
 
@@ -191,6 +191,13 @@ void CLootSpawnerComponent::GetModelsFromXML() {
 					if (childNode->getAttr("modelPath", path)) {
 						//Add the path to the correct vector
 						sCommonClasses.push_back(path);
+
+						//Get the items name
+						XmlString name;
+						if (childNode->getAttr("modelName", name)) {
+							sName = name;
+						}
+
 					}
 
 				}
@@ -201,6 +208,12 @@ void CLootSpawnerComponent::GetModelsFromXML() {
 					if (childNode->getAttr("modelPath", path)) {
 						//Add the path to the correct vector
 						sUncommonClasses.push_back(path);
+
+						//Get the items name
+						XmlString name;
+						if (childNode->getAttr("modelName", name)) {
+							sName = name;
+						}
 					}
 				}
 				//If the rarity is 3, continue
@@ -210,6 +223,12 @@ void CLootSpawnerComponent::GetModelsFromXML() {
 					if (childNode->getAttr("modelPath", path)) {
 						//Add the path to the correct vector
 						sRareClasses.push_back(path);
+
+						//Get the items name
+						XmlString name;
+						if (childNode->getAttr("modelName", name)) {
+							sName = name;
+						}
 					}
 				}
 				//If the rarity is 4, continue
@@ -219,6 +238,12 @@ void CLootSpawnerComponent::GetModelsFromXML() {
 					if (childNode->getAttr("modelPath", path)) {
 						//Add the path to the correct vector
 						sRarerClasses.push_back(path);
+
+						//Get the items name
+						XmlString name;
+						if (childNode->getAttr("modelName", name)) {
+							sName = name;
+						}
 					}
 				}
 				//If the rarity is 5, continue
@@ -228,6 +253,12 @@ void CLootSpawnerComponent::GetModelsFromXML() {
 					if (childNode->getAttr("modelPath", path)) {
 						//Add the path to the correct vector
 						sURareClasses.push_back(path);
+
+						//Get the items name
+						XmlString name;
+						if (childNode->getAttr("modelName", name)) {
+							sName = name;
+						}
 					}
 				}
 
