@@ -15,7 +15,12 @@ static void RegisterLootSpawnerComponent(Schematyc::IEnvRegistrar& registrar) {
 CRY_STATIC_AUTO_REGISTER_FUNCTION(&RegisterLootSpawnerComponent)
 
 //Called when the component is created
-void CLootSpawnerComponent::Initialize() {}
+void CLootSpawnerComponent::Initialize() {
+
+	//Gets all of the models to spawn at the start
+	GetModelsFromXML();
+
+}
 
 //Gets different events
 uint64 CLootSpawnerComponent::GetEventMask() const {
