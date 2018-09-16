@@ -19,8 +19,8 @@ void CLootSpawnerComponent::Initialize() {
 
 	//Gets all of the models to spawn at the start
 	GetModelsFromXML();
-	//Gets all of the spawn positions from the xml file
-	GetSpawnPositionsFromXML();
+	//Spawns the loot for this point
+	SpawnItem();
 
 }
 
